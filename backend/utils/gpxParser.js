@@ -1,75 +1,80 @@
-import fs from 'fs';
+import { promises as fs } from 'fs';
 import { XMLParser } from 'fast-xml-parser';
 import { fetchWindAt } from './weather.js';
 
 export async function parseGPXFile(filePath) {
-  return new Promise((resolve, reject) => {
-    fs.readFile(filePath, 'utf8', (err, data) => {
-      if (err) {
-        reject(err);
-        return;
+  try {
+    const data = await fs.readFile(filePath, 'utf8');
+
+    const parser = new XMLParser();
+    const gpxData = parser.parse(data);
+
+    const trackpoints = extractTrackpoints(gpxData);
+
+    // Compute headings and speed over ground
+    computeHeadingsAndSOG(trackpoints);
+
+    // Optional weather enrichment
+    if (process.env.ENABLE_WEATHER === 'true') {
+      const sampleEvery = 10;
+      const weatherPromises = [];
+
+      for (let i = 0; i < trackpoints.length; i += sampleEvery) {
+        const pt = trackpoints[i];
+
+        if (pt && pt.time) {
+          weatherPromises.push(
+            fetchWindAt(pt.lat, pt.lon, pt.time)
+              .then(w => ({ index: i, wind: w }))
+              .catch(() => null)
+          );
+        }
       }
 
       try {
-        const parser = new XMLParser();
-        const gpxData = parser.parse(data);
-        
-        const trackpoints = extractTrackpoints(gpxData);
-        // compute headings and speeds (SOG) per point
-        computeHeadingsAndSOG(trackpoints);
+        const results = await Promise.all(weatherPromises);
 
-        // Optional weather enrichment (opt-in via ENV var ENABLE_WEATHER=true)
-        if (process.env.ENABLE_WEATHER === 'true') {
-          // sample every Nth point to limit API usage
-          const sampleEvery = 10;
-          const promises = [];
-          for (let i = 0; i < trackpoints.length; i += sampleEvery) {
-            const pt = trackpoints[i];
-            if (pt && pt.time) {
-              promises.push(
-                fetchWindAt(pt.lat, pt.lon, pt.time).then(w => ({ i, w }))
-              );
-            }
+        results.forEach(result => {
+          if (!result || !result.wind) return;
+
+          const idx = result.index;
+
+          if (trackpoints[idx]) {
+            trackpoints[idx].wind = {
+              speed: result.wind.windspeed,
+              direction: result.wind.winddirection,
+              time: result.wind.time
+            };
           }
-
-          try {
-            const results = await Promise.all(promises);
-            results.forEach(r => {
-              if (r.w) {
-                // annotate nearest actual point as well
-                const idx = r.i;
-                trackpoints[idx].wind = {
-                  speed: r.w.windspeed,
-                  direction: r.w.winddirection,
-                  time: r.w.time
-                };
-              }
-            });
-          } catch (e) {
-            // ignore weather failures
-          }
-        }
-
-        // compute VMG and tacks based on heading and optional wind
-        const vmgTacks = computeVMGAndTacks(trackpoints);
-
-        const analysis = analyzeRace(trackpoints);
-        if (vmgTacks) analysis.vmg = vmgTacks;
-        const marks = extractMarks(gpxData);
-
-        resolve({
-          trackpoints,
-          analysis,
-          marks,
-          metadata: extractMetadata(gpxData)
         });
-      } catch (error) {
-        reject(error);
+      } catch (err) {
+        console.error('Weather enrichment failed:', err);
       }
-    });
-  });
-}
+    }
 
+    // VMG and tack analysis
+    const vmgTacks = computeVMGAndTacks(trackpoints);
+
+    // Race analysis
+    const analysis = analyzeRace(trackpoints);
+
+    if (vmgTacks) {
+      analysis.vmg = vmgTacks;
+    }
+
+    const marks = extractMarks(gpxData);
+
+    return {
+      trackpoints,
+      analysis,
+      marks,
+      metadata: extractMetadata(gpxData)
+    };
+  } catch (error) {
+    console.error('Error parsing GPX file:', error);
+    throw error;
+  }
+}
 function extractTrackpoints(gpxData) {
   const trackpoints = [];
   
