@@ -3,6 +3,9 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [react()],
+  css: {
+    postcss: false,
+  },
   build: {
     sourcemap: false,
     minify: 'esbuild',
