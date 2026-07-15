@@ -75,6 +75,7 @@ export async function parseGPXFile(filePath) {
     throw error;
   }
 }
+
 function extractTrackpoints(gpxData) {
   const trackpoints = [];
   
