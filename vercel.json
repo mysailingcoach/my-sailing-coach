@@ -1,7 +1,7 @@
 {
+  "installCommand": "npm install --workspaces",
   "buildCommand": "cd frontend && npm run build",
   "outputDirectory": "frontend/dist",
-  "installCommand": "npm install --workspaces",
   "rewrites": [
     {
       "source": "/api/(.*)",
