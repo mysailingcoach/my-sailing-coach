@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://your-render-url.onrender.com/api/$1"
+      "destination": "https://my-sailing-coach.onrender.com"
     },
     {
       "source": "/(.*)",
