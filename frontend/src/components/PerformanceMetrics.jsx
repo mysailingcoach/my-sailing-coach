@@ -36,6 +36,47 @@ export default function PerformanceMetrics({ analysis }) {
       color: 'purple'
     },
     {
+      import React from 'react';
+
+export default function PerformanceMetrics({ analysis }) {
+
+  const formatNumber = (value, decimals = 1) => {
+    return value != null && !isNaN(value)
+      ? Number(value).toFixed(decimals)
+      : 'N/A';
+  };
+
+  if (!analysis) {
+    return (
+      <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+        No analysis data available.
+      </div>
+    );
+  }
+
+  const metrics = [
+    {
+      label: 'Total Distance',
+      value: analysis.totalDistance ?? 'N/A',
+      unit: 'km',
+      icon: '📏',
+      color: 'blue'
+    },
+    {
+      label: 'Total Duration',
+      value: formatNumber(analysis.totalTime),
+      unit: 'hours',
+      icon: '⏱️',
+      color: 'green'
+    },
+    {
+      label: 'Average Speed',
+      value: formatNumber(analysis.avgSpeed),
+      unit: 'km/h',
+      icon: '📊',
+      color: 'purple'
+    },
+    {
       label: 'Maximum Speed',
       value: formatNumber(analysis.maxSpeed),
       unit: 'km/h',
@@ -44,11 +85,19 @@ export default function PerformanceMetrics({ analysis }) {
     },
     {
       label: 'Minimum Speed',
-      value: `formatNumber(analysis.minSpeed),
+      value: formatNumber(analysis.minSpeed),
       unit: 'km/h',
       icon: '🐢',
       color: 'red'
     },
+    {
+      label: 'Data Points',
+      value: analysis.pointCount ?? 'N/A',
+      unit: 'points',
+      icon: '📍',
+      color: 'indigo'
+    }
+  ];
     {
       label: 'Data Points',
       value: `${analysis.pointCount}`,
@@ -90,7 +139,7 @@ export default function PerformanceMetrics({ analysis }) {
       </div>
 
       {/* AI Analysis Summary */}
-      {analysis.ai && (
+      {analysis?.ai && (
         <div className="bg-white rounded-lg shadow-md p-6">
           <h3 className="text-lg font-bold text-gray-800 mb-2">AI Analysis</h3>
           <p className="text-sm text-gray-700 mb-2">{analysis.ai.summary}</p>
