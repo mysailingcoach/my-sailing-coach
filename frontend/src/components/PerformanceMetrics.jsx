@@ -1,12 +1,12 @@
 import React from 'react';
 
 export default function PerformanceMetrics({ analysis }) {
-  if (!analysis) {
-  return (
-    <div className="bg-yellow-50 border border-yellow-200 p-4 rounded">
-      No analysis data available.
-    </div>
-  );
+
+  const formatNumber = (value, decimals = 1) => {
+    return value != null && !isNaN(value)
+      ? Number(value).toFixed(decimals)
+      : 'N/A';
+  };
 }
   const formatNumber = (value, decimals = 1) => {
   return value != null && !isNaN(value)
@@ -23,28 +23,28 @@ export default function PerformanceMetrics({ analysis }) {
     },
     {
       label: 'Total Duration',
-      value: formatNumber(analysis.totalTime)
+      value: formatNumber(analysis.totalTime),
       unit: 'hours',
       icon: '⏱️',
       color: 'green'
     },
     {
       label: 'Average Speed',
-      value: formatNumber(analysis.avgSpeed)
+      value: formatNumber(analysis.avgSpeed),
       unit: 'km/h',
       icon: '📊',
       color: 'purple'
     },
     {
       label: 'Maximum Speed',
-      value: formatNumber(analysis.maxSpeed)
+      value: formatNumber(analysis.maxSpeed),
       unit: 'km/h',
       icon: '⚡',
       color: 'orange'
     },
     {
       label: 'Minimum Speed',
-      value: `formatNumber(analysis.minSpeed)
+      value: `formatNumber(analysis.minSpeed),
       unit: 'km/h',
       icon: '🐢',
       color: 'red'
