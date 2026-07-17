@@ -1,29 +1,65 @@
 import React from 'react';
-import { MapContainer, TileLayer, Polyline, Marker, Popup } from 'react-leaflet';
+import {
+  MapContainer,
+  TileLayer,
+  Polyline,
+  Marker,
+  Popup
+} from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Fix for default marker icons
+// Fix marker icons
 delete L.Icon.Default.prototype._getIconUrl;
+
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+  iconRetinaUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl:
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png'
 });
 
-export default function RaceMap({ trackpoints, marks = [] }) {
-  if (!trackpoints || trackpoints.length === 0) {
-    return <div className="h-96 flex items-center justify-center text-gray-500">No tracking data available</div>;
+export default function RaceMap({ trackpoints = [], marks = [] }) {
+  const validTrackpoints = trackpoints.filter(
+    (pt) =>
+      pt &&
+      pt.lat != null &&
+      pt.lon != null &&
+      !isNaN(pt.lat) &&
+      !isNaN(pt.lon)
+  );
+
+  if (validTrackpoints.length === 0) {
+    return (
+      <div className="h-96 flex items-center justify-center text-gray-500">
+        No valid GPS tracking data available
+      </div>
+    );
   }
 
-  // Convert trackpoints to Leaflet format [lat, lon]
-  const positions = trackpoints.map(pt => [pt.lat, pt.lon]);
-  
-  // Calculate center
-  const center = trackpoints.length > 0 ? [
-    trackpoints[0].lat,
-    trackpoints[0].lon
-  ] : [0, 0];
+  const positions = validTrackpoints.map((pt) => [
+    Number(pt.lat),
+    Number(pt.lon)
+  ]);
+
+  const startPoint = validTrackpoints[0];
+  const endPoint = validTrackpoints[validTrackpoints.length - 1];
+
+  const center = [
+    Number(startPoint.lat),
+    Number(startPoint.lon)
+  ];
+
+  const validMarks = (marks || []).filter(
+    (m) =>
+      m &&
+      m.lat != null &&
+      m.lon != null &&
+      !isNaN(m.lat) &&
+      !isNaN(m.lon)
+  );
 
   return (
     <MapContainer
@@ -34,44 +70,64 @@ export default function RaceMap({ trackpoints, marks = [] }) {
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; OpenStreetMap contributors'
+        attribution="&copy; OpenStreetMap contributors"
       />
-      
-      {/* Race route line */}
+
       <Polyline
         positions={positions}
         color="blue"
         weight={3}
-        opacity={0.7}
+        opacity={0.8}
       />
 
-      {/* Start marker */}
-      <Marker position={[trackpoints[0].lat, trackpoints[0].lon]}>
+      <Marker
+        position={[
+          Number(startPoint.lat),
+          Number(startPoint.lon)
+        ]}
+      >
         <Popup>
-          <div className="text-sm">
-            <strong>Start</strong><br />
-            {new Date(trackpoints[0].time).toLocaleTimeString()}
+          <div>
+            <strong>Start</strong>
+            <br />
+            {startPoint.time
+              ? new Date(startPoint.time).toLocaleTimeString()
+              : 'Unknown'}
           </div>
         </Popup>
       </Marker>
 
-      {/* End marker */}
-      <Marker position={[trackpoints[trackpoints.length - 1].lat, trackpoints[trackpoints.length - 1].lon]}>
+      <Marker
+        position={[
+          Number(endPoint.lat),
+          Number(endPoint.lon)
+        ]}
+      >
         <Popup>
-          <div className="text-sm">
-            <strong>Finish</strong><br />
-            {new Date(trackpoints[trackpoints.length - 1].time).toLocaleTimeString()}
+          <div>
+            <strong>Finish</strong>
+            <br />
+            {endPoint.time
+              ? new Date(endPoint.time).toLocaleTimeString()
+              : 'Unknown'}
           </div>
         </Popup>
       </Marker>
 
-      {/* Marks / Waypoints */}
-      {marks && marks.length > 0 && marks.map((m, i) => (
-        <Marker key={`mark-${i}`} position={[m.lat, m.lon]}>
+      {validMarks.map((mark, index) => (
+        <Marker
+          key={index}
+          position={[
+            Number(mark.lat),
+            Number(mark.lon)
+          ]}
+        >
           <Popup>
-            <div className="text-sm">
-              <strong>{m.name || `Mark ${i + 1}`}</strong>
-              {m.desc && <div className="text-xs text-gray-600">{m.desc}</div>}
+            <div>
+              <strong>
+                {mark.name || `Mark ${index + 1}`}
+              </strong>
+              {mark.desc && <div>{mark.desc}</div>}
             </div>
           </Popup>
         </Marker>
