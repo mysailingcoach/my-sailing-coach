@@ -53,6 +53,8 @@ export default function RaceDetail() {
   }
 
   const data = race.data || {};
+  console.log('First trackpoint:', data.trackpoints?.[0]);
+console.log('Trackpoint count:', data.trackpoints?.length);
 
   const safeNumber = (value, decimals) => {
     return value != null && !isNaN(value)
