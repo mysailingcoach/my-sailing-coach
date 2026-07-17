@@ -8,6 +8,11 @@ export default function PerformanceMetrics({ analysis }) {
     </div>
   );
 }
+  const formatNumber = (value, decimals = 1) => {
+  return value != null && !isNaN(value)
+    ? Number(value).toFixed(decimals)
+    : 'N/A';
+};
   const metrics = [
     {
       label: 'Total Distance',
@@ -18,28 +23,28 @@ export default function PerformanceMetrics({ analysis }) {
     },
     {
       label: 'Total Duration',
-      value: `${analysis.totalTime.toFixed(1)}`,
+      value: formatNumber(analysis.totalTime)
       unit: 'hours',
       icon: '⏱️',
       color: 'green'
     },
     {
       label: 'Average Speed',
-      value: `${analysis.avgSpeed.toFixed(1)}`,
+      value: formatNumber(analysis.avgSpeed)
       unit: 'km/h',
       icon: '📊',
       color: 'purple'
     },
     {
       label: 'Maximum Speed',
-      value: `${analysis.maxSpeed.toFixed(1)}`,
+      value: formatNumber(analysis.maxSpeed)
       unit: 'km/h',
       icon: '⚡',
       color: 'orange'
     },
     {
       label: 'Minimum Speed',
-      value: `${analysis.minSpeed.toFixed(1)}`,
+      value: `formatNumber(analysis.minSpeed)
       unit: 'km/h',
       icon: '🐢',
       color: 'red'
@@ -124,7 +129,7 @@ export default function PerformanceMetrics({ analysis }) {
           </div>
           <div className="border-t pt-3 flex justify-between items-center">
             <span className="text-gray-600">Total Duration:</span>
-            <span className="font-semibold text-lg">{analysis.totalTime.toFixed(2)} hours</span>
+            <span className="font-semibold text-lg">{formatNumber(analysis.totalTime, 2)} hours</span>
           </div>
         </div>
       </div>
