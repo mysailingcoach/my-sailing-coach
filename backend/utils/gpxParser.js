@@ -7,49 +7,45 @@ export async function parseGPXFile(filePath) {
     const data = await fs.readFile(filePath, 'utf8');
 
     const parser = new XMLParser({
-  ignoreAttributes: false,
-  attributeNamePrefix: '@_'
-});
+      ignoreAttributes: false,
+      attributeNamePrefix: '@_'
+    });
+
     const gpxData = parser.parse(data);
 
     const trackpoints = extractTrackpoints(gpxData);
-    console.log('Trackpoints parsed:', trackpoints.length);
-console.log('First parsed point:', trackpoints[0]);
 
-    // Compute headings and speed over ground
+    console.log('Trackpoints parsed:', trackpoints.length);
+    console.log('First parsed point:', trackpoints[0]);
+
+    // Compute headings and speed
     computeHeadingsAndSOG(trackpoints);
 
-    // Optional weather enrichment
-    if (process.env.ENABLE_WEATHER === 'true' && trackpoints.length > 0) {
-  try {
-    await enrichTrackpointsWithWeather(trackpoints);
-  } catch (err) {
-    console.error('Weather enrichment failed:', err);
-  }
-}
+    // Weather enrichment
+    if (
+      process.env.ENABLE_WEATHER === 'true' &&
+      trackpoints.length > 0
+    ) {
+      console.log('Starting weather enrichment...');
 
       try {
-        const results = await Promise.all(weatherPromises);
+        await enrichTrackpointsWithWeather(trackpoints);
 
-        results.forEach(result => {
-          if (!result || !result.wind) return;
+        console.log(
+          'Weather attached:',
+          trackpoints.filter(p => p.wind).length,
+          'points'
+        );
 
-          const idx = result.index;
-
-          if (trackpoints[idx]) {
-            trackpoints[idx].wind = {
-              speed: result.wind.windspeed,
-              direction: result.wind.winddirection,
-              time: result.wind.time
-            };
-          }
-        });
+        if (trackpoints[0]?.wind) {
+          console.log('First wind sample:', trackpoints[0].wind);
+        }
       } catch (err) {
         console.error('Weather enrichment failed:', err);
       }
     }
 
-    // VMG and tack analysis
+    // VMG analysis
     const vmgTacks = computeVMGAndTacks(trackpoints);
 
     // Race analysis
@@ -75,34 +71,48 @@ console.log('First parsed point:', trackpoints[0]);
 
 function extractTrackpoints(gpxData) {
   const trackpoints = [];
-  
-  // Handle different GPX structures
-  const trk = gpxData.gpx?.trk || gpxData.gpx?.Trk;
-  
-  if (trk) {
-    const trkSeg = Array.isArray(trk) ? trk[0].trkseg : trk.trkseg;
-    const trkpts = Array.isArray(trkSeg) ? trkSeg[0].trkpt : trkSeg.trkpt;
-    
-    const points = Array.isArray(trkpts) ? trkpts : [trkpts];
-    
-    points.forEach((pt, idx) => {
-  const lat = parseFloat(pt?.['@_lat']);
-  const lon = parseFloat(pt?.['@_lon']);
 
-  if (isNaN(lat) || isNaN(lon)) {
-    return;
+  const trk = gpxData?.gpx?.trk;
+
+  if (!trk) {
+    console.log('No tracks found in GPX');
+    return trackpoints;
   }
 
-  trackpoints.push({
-    lat,
-    lon,
-    time: pt.time || null,
-    ele: parseFloat(pt.ele || 0),
-    index: idx
+  const trkseg = Array.isArray(trk)
+    ? trk[0]?.trkseg
+    : trk?.trkseg;
+
+  const trkpts = Array.isArray(trkseg)
+    ? trkseg[0]?.trkpt
+    : trkseg?.trkpt;
+
+  if (!trkpts) {
+    console.log('No trackpoints found');
+    return trackpoints;
+  }
+
+  const points = Array.isArray(trkpts)
+    ? trkpts
+    : [trkpts];
+
+  points.forEach((pt, idx) => {
+    const lat = Number(pt?.['@_lat']);
+    const lon = Number(pt?.['@_lon']);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+      return;
+    }
+
+    trackpoints.push({
+      lat,
+      lon,
+      time: pt?.time || null,
+      ele: Number(pt?.ele || 0),
+      index: idx
+    });
   });
-});
-  }
-  
+
   return trackpoints;
 }
 
