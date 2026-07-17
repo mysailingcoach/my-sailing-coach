@@ -1,6 +1,13 @@
 import React from 'react';
 
 export default function PerformanceMetrics({ analysis }) {
+  if (!analysis) {
+  return (
+    <div className="bg-yellow-50 border border-yellow-200 p-4 rounded">
+      No analysis data available.
+    </div>
+  );
+}
   const metrics = [
     {
       label: 'Total Distance',
