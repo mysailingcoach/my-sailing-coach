@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import { XMLParser } from 'fast-xml-parser';
-import { fetchWindAt } from './weather.js';
+import { enrichTrackpointsWithWeather } from './weather.js';
 
 export async function parseGPXFile(filePath) {
   try {
@@ -20,21 +20,13 @@ console.log('First parsed point:', trackpoints[0]);
     computeHeadingsAndSOG(trackpoints);
 
     // Optional weather enrichment
-    if (process.env.ENABLE_WEATHER === 'true') {
-      const sampleEvery = 10;
-      const weatherPromises = [];
-
-      for (let i = 0; i < trackpoints.length; i += sampleEvery) {
-        const pt = trackpoints[i];
-
-        if (pt && pt.time) {
-          weatherPromises.push(
-            fetchWindAt(pt.lat, pt.lon, pt.time)
-              .then(w => ({ index: i, wind: w }))
-              .catch(() => null)
-          );
-        }
-      }
+    if (process.env.ENABLE_WEATHER === 'true' && trackpoints.length > 0) {
+  try {
+    await enrichTrackpointsWithWeather(trackpoints);
+  } catch (err) {
+    console.error('Weather enrichment failed:', err);
+  }
+}
 
       try {
         const results = await Promise.all(weatherPromises);
