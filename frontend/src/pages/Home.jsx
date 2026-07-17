@@ -1,170 +1,228 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { getApiUrl } from '../api/client';
+return (
+  <div className="bg-slate-950 text-white">
 
-export default function Home() {
-  const [file, setFile] = useState(null);
-  const [raceName, setRaceName] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-  const navigate = useNavigate();
+    {/* HERO */}
+    <section className="relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-sky-900 via-slate-950 to-slate-950" />
 
-  const handleFileChange = (e) => {
-    const selected = e.target.files[0];
-    if (selected && selected.name.endsWith('.gpx')) {
-      setFile(selected);
-      setError('');
-      if (!raceName) {
-        setRaceName(selected.name.replace('.gpx', ''));
-      }
-    } else {
-      setError('Please select a valid GPX file');
-      setFile(null);
-    }
-  };
+      <div className="relative max-w-7xl mx-auto px-6 py-24">
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!file) {
-      setError('Please select a GPX file');
-      return;
-    }
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
 
-    setLoading(true);
-    setError('');
-
-    try {
-      const formData = new FormData();
-      formData.append('gpx', file);
-      formData.append('raceName', raceName);
-
-      const response = await axios.post(getApiUrl('/upload'), formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-
-      setSuccess(true);
-      setTimeout(() => {
-        navigate(`/race/${response.data.raceId}`);
-      }, 1000);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to upload file');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="space-y-8">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg shadow-lg p-12 text-white">
-        <h1 className="text-4xl font-bold mb-4">Analyze Your Sailing Performance</h1>
-        <p className="text-xl text-blue-100">Upload your GPX file and get detailed insights about your race including speed, distance, and performance metrics.</p>
-      </div>
-
-      {/* Upload Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Upload Form */}
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <h2 className="text-2xl font-bold mb-6 text-gray-800">Upload GPX File</h2>
-          
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Race Name Input */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Race Name</label>
-              <input
-                type="text"
-                value={raceName}
-                onChange={(e) => setRaceName(e.target.value)}
-                placeholder="e.g., Local Cup 2024"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+          <div>
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-300 text-sm mb-6">
+              Sailing Analytics Platform
             </div>
 
-            {/* File Upload */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">GPX File</label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition cursor-pointer">
-                <input
-                  type="file"
-                  accept=".gpx"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  id="file-input"
-                />
-                <label htmlFor="file-input" className="cursor-pointer block">
-                  <div className="text-4xl mb-2">📁</div>
-                  <p className="text-gray-700 font-medium">
-                    {file ? file.name : 'Click to upload or drag and drop'}
-                  </p>
-                  <p className="text-gray-500 text-sm">GPX files only</p>
-                </label>
-              </div>
-            </div>
+            <h1 className="text-6xl font-black leading-tight">
+              Sail Faster.
+              <br />
+              Learn More.
+              <br />
+              Win More Races.
+            </h1>
 
-            {/* Error Message */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                {error}
-              </div>
-            )}
-
-            {/* Success Message */}
-            {success && (
-              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
-                ✓ File processed successfully! Redirecting...
-              </div>
-            )}
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loading || !file}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 rounded-lg transition"
-            >
-              {loading ? 'Processing...' : 'Analyze Race'}
-            </button>
-          </form>
-        </div>
-
-        {/* Info Section */}
-        <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-xl font-bold mb-4 text-gray-800">📊 What You'll Get</h3>
-            <ul className="space-y-3">
-              <li className="flex items-start">
-                <span className="text-blue-600 mr-3">✓</span>
-                <span className="text-gray-700"><strong>Interactive Map</strong> - View your race route</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-blue-600 mr-3">✓</span>
-                <span className="text-gray-700"><strong>Speed Analysis</strong> - Average, max, and min speeds</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-blue-600 mr-3">✓</span>
-                <span className="text-gray-700"><strong>Distance Tracking</strong> - Total distance covered</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-blue-600 mr-3">✓</span>
-                <span className="text-gray-700"><strong>Race Duration</strong> - Start time, end time, total duration</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-blue-600 mr-3">✓</span>
-                <span className="text-gray-700"><strong>Unlimited Uploads</strong> - Completely free</span>
-              </li>
-            </ul>
-          </div>
-
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-            <h3 className="text-lg font-bold mb-3 text-gray-800">💡 About GPX Files</h3>
-            <p className="text-gray-700 text-sm">
-              GPX (GPS Exchange Format) files contain GPS coordinates recorded by your device. Most GPS watches, smartphones, and sailing apps can record and export GPX files of your sailing activities.
+            <p className="mt-8 text-xl text-slate-300 max-w-xl">
+              Upload your GPX track and transform raw GPS data
+              into race-winning insights.
             </p>
+
+            <div className="flex gap-4 mt-10">
+              <label
+                htmlFor="file-input"
+                className="px-8 py-4 bg-sky-500 hover:bg-sky-400 rounded-xl font-bold cursor-pointer transition"
+              >
+                Upload GPX
+              </label>
+
+              <button className="px-8 py-4 border border-slate-700 rounded-xl hover:border-slate-500">
+                View Demo
+              </button>
+            </div>
+
+            <div className="flex gap-10 mt-12">
+              <div>
+                <div className="text-3xl font-bold">10k+</div>
+                <div className="text-slate-400">
+                  GPX Tracks
+                </div>
+              </div>
+
+              <div>
+                <div className="text-3xl font-bold">500+</div>
+                <div className="text-slate-400">
+                  Sailors
+                </div>
+              </div>
+
+              <div>
+                <div className="text-3xl font-bold">100%</div>
+                <div className="text-slate-400">
+                  Free
+                </div>
+              </div>
+            </div>
           </div>
+
+          {/* Dashboard Preview */}
+          <div>
+            <div className="bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl overflow-hidden">
+
+              <div className="h-12 border-b border-slate-800 flex items-center px-4 gap-2">
+                <div className="w-3 h-3 rounded-full bg-red-500" />
+                <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                <div className="w-3 h-3 rounded-full bg-green-500" />
+              </div>
+
+              <div className="p-6">
+
+                <div className="bg-slate-800 rounded-xl h-72 flex items-center justify-center text-6xl">
+                  ⛵
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 mt-6">
+
+                  <div className="bg-slate-800 rounded-xl p-4">
+                    <div className="text-slate-400 text-sm">
+                      Max Speed
+                    </div>
+                    <div className="text-2xl font-bold">
+                      17.8 kn
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-800 rounded-xl p-4">
+                    <div className="text-slate-400 text-sm">
+                      Distance
+                    </div>
+                    <div className="text-2xl font-bold">
+                      23 nm
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-800 rounded-xl p-4">
+                    <div className="text-slate-400 text-sm">
+                      Duration
+                    </div>
+                    <div className="text-2xl font-bold">
+                      2:41
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+
         </div>
+
       </div>
-    </div>
-  );
-}
+    </section>
+
+    {/* FEATURES */}
+    <section className="max-w-7xl mx-auto px-6 py-24">
+
+      <div className="text-center mb-16">
+        <h2 className="text-5xl font-bold">
+          Everything You Need To Analyze A Race
+        </h2>
+      </div>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+
+        <div className="bg-slate-900 rounded-2xl p-8">
+          <div className="text-4xl mb-4">📍</div>
+          <h3 className="font-bold text-xl">
+            Route Replay
+          </h3>
+          <p className="text-slate-400 mt-3">
+            Visualize every maneuver and tack.
+          </p>
+        </div>
+
+        <div className="bg-slate-900 rounded-2xl p-8">
+          <div className="text-4xl mb-4">⚡</div>
+          <h3 className="font-bold text-xl">
+            Speed Analysis
+          </h3>
+          <p className="text-slate-400 mt-3">
+            Track top speed and averages.
+          </p>
+        </div>
+
+        <div className="bg-slate-900 rounded-2xl p-8">
+          <div className="text-4xl mb-4">📊</div>
+          <h3 className="font-bold text-xl">
+            Performance Metrics
+          </h3>
+          <p className="text-slate-400 mt-3">
+            Understand your race performance.
+          </p>
+        </div>
+
+        <div className="bg-slate-900 rounded-2xl p-8">
+          <div className="text-4xl mb-4">🏁</div>
+          <h3 className="font-bold text-xl">
+            Race Reports
+          </h3>
+          <p className="text-slate-400 mt-3">
+            Generate race summaries instantly.
+          </p>
+        </div>
+
+      </div>
+
+    </section>
+
+    {/* UPLOAD CTA */}
+    <section className="max-w-4xl mx-auto px-6 pb-24">
+
+      <div className="bg-gradient-to-r from-sky-600 to-blue-700 rounded-3xl p-12 text-center">
+
+        <h2 className="text-4xl font-bold mb-4">
+          Upload Your Next Race
+        </h2>
+
+        <p className="text-blue-100 mb-8">
+          Analyze your GPX file in seconds.
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          <input
+            id="file-input"
+            type="file"
+            accept=".gpx"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+
+          <label
+            htmlFor="file-input"
+            className="inline-block px-8 py-4 bg-white text-sky-700 rounded-xl font-bold cursor-pointer"
+          >
+            Select GPX File
+          </label>
+
+          {file && (
+            <div className="mt-6 text-white">
+              {file.name}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={!file || loading}
+            className="block mx-auto mt-6 px-10 py-4 bg-slate-950 rounded-xl font-bold"
+          >
+            {loading ? 'Processing...' : 'Analyze Race'}
+          </button>
+        </form>
+
+      </div>
+
+    </section>
+
+  </div>
+);
