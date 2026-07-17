@@ -50,6 +50,22 @@ export async function parseGPXFile(filePath) {
 
     // Race analysis
     const analysis = analyzeRace(trackpoints);
+    const weatherPoints = trackpoints.filter(
+  p => p.wind && p.wind.speed != null
+);
+
+if (weatherPoints.length > 0) {
+  analysis.weather = {
+    avgWindSpeed:
+      weatherPoints.reduce((s, p) => s + p.wind.speed, 0) /
+      weatherPoints.length,
+
+    maxWindSpeed:
+      Math.max(...weatherPoints.map(p => p.wind.speed)),
+
+    samples: weatherPoints.length
+  };
+}
 
     if (vmgTacks) {
       analysis.vmg = vmgTacks;
@@ -126,8 +142,8 @@ function extractMarks(gpxData) {
 
   points.forEach(pt => {
     marks.push({
-      lat: parseFloat(pt['@_lat'] || pt.lat),
-      lon: parseFloat(pt['@_lon'] || pt.lon),
+      lat: Number(pt?.['@_lat'] ?? pt?.lat),
+      lon: Number(pt?.['@_lon'] ?? pt?.lon),
       name: pt.name || pt['@_name'] || pt.desc || 'Mark',
       desc: pt.desc || ''
     });
@@ -243,7 +259,12 @@ function computeVMGAndTacks(trackpoints) {
 
   for (let i = 0; i < trackpoints.length; i++) {
     const p = trackpoints[i];
-    if (p && typeof p.heading === 'number' && p.wind && typeof p.wind.direction === 'number') {
+   if (
+  p &&
+  Number.isFinite(p.heading) &&
+  p.wind &&
+  Number.isFinite(p.wind.direction)
+)
       const angle = Math.abs(((p.heading - p.wind.direction + 540) % 360) - 180); // angle between heading and wind (0-180)
       const angleRad = (angle * Math.PI) / 180;
       const vmg = (p.sog || 0) * Math.cos(angleRad);
