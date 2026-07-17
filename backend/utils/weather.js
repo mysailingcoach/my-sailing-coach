@@ -1,42 +1,85 @@
 import fetch from 'node-fetch';
 
-// Simple prototype: fetch hourly windspeed and direction from Open-Meteo
-// Returns nearest hourly wind data for the provided ISO timestamp (UTC)
-export async function fetchWindAt(lat, lon, isoTime) {
-  try {
-    const date = new Date(isoTime);
-    const day = date.toISOString().slice(0, 10);
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=windspeed_10m,winddirection_10m&start_date=${day}&end_date=${day}&timezone=UTC`;
+export async function enrichTrackpointsWithWeather(trackpoints) {
+  if (!trackpoints?.length) return;
 
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Weather API error ${res.status}`);
-    const data = await res.json();
+  // Find center of race area
+  const avgLat =
+    trackpoints.reduce((sum, p) => sum + p.lat, 0) /
+    trackpoints.length;
 
-    const times = data.hourly.time || [];
-    const speeds = data.hourly.windspeed_10m || [];
-    const dirs = data.hourly.winddirection_10m || [];
+  const avgLon =
+    trackpoints.reduce((sum, p) => sum + p.lon, 0) /
+    trackpoints.length;
 
-    if (!times.length) return null;
+  // Race date
+  const raceDate = new Date(trackpoints[0].time)
+    .toISOString()
+    .split('T')[0];
 
-    // find nearest index
-    let idx = 0;
-    const target = date.getTime();
-    let bestDiff = Infinity;
-    for (let i = 0; i < times.length; i++) {
-      const t = new Date(times[i]).getTime();
-      const diff = Math.abs(t - target);
-      if (diff < bestDiff) {
-        bestDiff = diff;
-        idx = i;
+  const url =
+    `https://archive-api.open-meteo.com/v1/archive` +
+    `?latitude=${avgLat}` +
+    `&longitude=${avgLon}` +
+    `&start_date=${raceDate}` +
+    `&end_date=${raceDate}` +
+    `&hourly=wind_speed_10m,wind_direction_10m` +
+    `&timezone=UTC`;
+
+  console.log('Fetching weather:', url);
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(
+      `Weather API error ${response.status}`
+    );
+  }
+
+  const data = await response.json();
+
+  const hourlyTimes = data.hourly?.time || [];
+  const windSpeeds = data.hourly?.wind_speed_10m || [];
+  const windDirections =
+    data.hourly?.wind_direction_10m || [];
+
+  if (!hourlyTimes.length) {
+    console.log('No weather data returned');
+    return;
+  }
+
+  // Convert hourly timestamps once
+  const hourlyTimestamps = hourlyTimes.map(
+    t => new Date(t).getTime()
+  );
+
+  // Match every trackpoint to nearest hour
+  trackpoints.forEach(point => {
+    const pointTime = new Date(point.time).getTime();
+
+    let nearestIndex = 0;
+    let smallestDiff = Infinity;
+
+    for (let i = 0; i < hourlyTimestamps.length; i++) {
+      const diff = Math.abs(
+        pointTime - hourlyTimestamps[i]
+      );
+
+      if (diff < smallestDiff) {
+        smallestDiff = diff;
+        nearestIndex = i;
       }
     }
 
-    return {
-      time: times[idx],
-      windspeed: speeds[idx],
-      winddirection: dirs[idx]
+    point.wind = {
+      speed: windSpeeds[nearestIndex] ?? null,
+      direction:
+        windDirections[nearestIndex] ?? null,
+      time: hourlyTimes[nearestIndex]
     };
-  } catch (err) {
-    return null;
-  }
+  });
+
+  console.log(
+    `Weather attached to ${trackpoints.length} trackpoints`
+  );
 }
