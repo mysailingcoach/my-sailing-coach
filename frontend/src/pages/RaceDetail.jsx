@@ -7,6 +7,7 @@ import { getApiUrl } from '../api/client';
 
 export default function RaceDetail() {
   const { id } = useParams();
+
   const [race, setRace] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -15,8 +16,12 @@ export default function RaceDetail() {
     const fetchRace = async () => {
       try {
         const response = await axios.get(getApiUrl(`/races/${id}`));
+
+        console.log('Race Data:', response.data);
+
         setRace(response.data);
       } catch (err) {
+        console.error(err);
         setError('Failed to load race data');
       } finally {
         setLoading(false);
@@ -31,7 +36,9 @@ export default function RaceDetail() {
       <div className="flex justify-center items-center h-96">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading race data...</p>
+          <p className="mt-4 text-gray-600">
+            Loading race data...
+          </p>
         </div>
       </div>
     );
@@ -45,55 +52,111 @@ export default function RaceDetail() {
     );
   }
 
-  const data = race.data;
+  const data = race.data || {};
+
+  const safeNumber = (value, decimals) => {
+    return value != null && !isNaN(value)
+      ? Number(value).toFixed(decimals)
+      : 'N/A';
+  };
 
   return (
     <div className="space-y-8">
+
       {/* Header */}
       <div className="bg-white rounded-lg shadow-md p-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">{race.name}</h1>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">
+          {race.name}
+        </h1>
+
         <p className="text-gray-600">
-          Uploaded: {new Date(race.uploadDate).toLocaleDateString()} at {new Date(race.uploadDate).toLocaleTimeString()}
+          Uploaded:{' '}
+          {race.uploadDate
+            ? `${new Date(race.uploadDate).toLocaleDateString()} at ${new Date(race.uploadDate).toLocaleTimeString()}`
+            : 'N/A'}
         </p>
       </div>
 
       {/* Map */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <RaceMap trackpoints={data.trackpoints} marks={data.marks || []} />
+        <RaceMap
+          trackpoints={data.trackpoints || []}
+          marks={data.marks || []}
+        />
       </div>
 
       {/* Metrics */}
-      console.log(data.analysis);
       <PerformanceMetrics analysis={data.analysis} />
 
-      {/* Raw Data Table */}
+      {/* Route Details */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">Route Details</h2>
+        <h2 className="text-2xl font-bold mb-4 text-gray-800">
+          Route Details
+        </h2>
+
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-100">
               <tr>
-                <th className="px-4 py-2 text-left font-semibold text-gray-700">Point #</th>
-                <th className="px-4 py-2 text-left font-semibold text-gray-700">Latitude</th>
-                <th className="px-4 py-2 text-left font-semibold text-gray-700">Longitude</th>
-                <th className="px-4 py-2 text-left font-semibold text-gray-700">Elevation (m)</th>
-                <th className="px-4 py-2 text-left font-semibold text-gray-700">Time</th>
+                <th className="px-4 py-2 text-left">
+                  Point #
+                </th>
+                <th className="px-4 py-2 text-left">
+                  Latitude
+                </th>
+                <th className="px-4 py-2 text-left">
+                  Longitude
+                </th>
+                <th className="px-4 py-2 text-left">
+                  Elevation (m)
+                </th>
+                <th className="px-4 py-2 text-left">
+                  Time
+                </th>
               </tr>
             </thead>
+
             <tbody>
-              {data.trackpoints.slice(0, 50).map((point, idx) => (
-                <tr key={idx} className="border-b hover:bg-gray-50">
-                  <td className="px-4 py-2">{point.index + 1}</td>
-                  <td className="px-4 py-2">{point.lat.toFixed(6)}</td>
-                  <td className="px-4 py-2">{point.lon.toFixed(6)}</td>
-                  <td className="px-4 py-2">{point.ele.toFixed(1)}</td>
-                  <td className="px-4 py-2 text-xs">{new Date(point.time).toLocaleTimeString()}</td>
-                </tr>
-              ))}
+              {(data.trackpoints || [])
+                .slice(0, 50)
+                .map((point, idx) => (
+                  <tr
+                    key={idx}
+                    className="border-b hover:bg-gray-50"
+                  >
+                    <td className="px-4 py-2">
+                      {(point.index ?? idx) + 1}
+                    </td>
+
+                    <td className="px-4 py-2">
+                      {safeNumber(point.lat, 6)}
+                    </td>
+
+                    <td className="px-4 py-2">
+                      {safeNumber(point.lon, 6)}
+                    </td>
+
+                    <td className="px-4 py-2">
+                      {safeNumber(point.ele, 1)}
+                    </td>
+
+                    <td className="px-4 py-2 text-xs">
+                      {point.time
+                        ? new Date(
+                            point.time
+                          ).toLocaleTimeString()
+                        : 'N/A'}
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
-          {data.trackpoints.length > 50 && (
-            <p className="text-sm text-gray-600 p-4">Showing 50 of {data.trackpoints.length} points</p>
+
+          {(data.trackpoints || []).length > 50 && (
+            <p className="text-sm text-gray-600 p-4">
+              Showing 50 of{' '}
+              {data.trackpoints.length} points
+            </p>
           )}
         </div>
       </div>
