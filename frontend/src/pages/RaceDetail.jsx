@@ -63,6 +63,7 @@ export default function RaceDetail() {
       </div>
 
       {/* Metrics */}
+      console.log(data.analysis);
       <PerformanceMetrics analysis={data.analysis} />
 
       {/* Raw Data Table */}
