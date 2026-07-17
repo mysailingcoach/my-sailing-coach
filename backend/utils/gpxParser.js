@@ -6,10 +6,15 @@ export async function parseGPXFile(filePath) {
   try {
     const data = await fs.readFile(filePath, 'utf8');
 
-    const parser = new XMLParser();
+    const parser = new XMLParser({
+  ignoreAttributes: false,
+  attributeNamePrefix: '@_'
+});
     const gpxData = parser.parse(data);
 
     const trackpoints = extractTrackpoints(gpxData);
+    console.log('Trackpoints parsed:', trackpoints.length);
+console.log('First parsed point:', trackpoints[0]);
 
     // Compute headings and speed over ground
     computeHeadingsAndSOG(trackpoints);
@@ -89,14 +94,21 @@ function extractTrackpoints(gpxData) {
     const points = Array.isArray(trkpts) ? trkpts : [trkpts];
     
     points.forEach((pt, idx) => {
-      trackpoints.push({
-        lat: parseFloat(pt['@_lat'] || pt.lat),
-        lon: parseFloat(pt['@_lon'] || pt.lon),
-        time: pt.time,
-        ele: parseFloat(pt.ele || 0),
-        index: idx
-      });
-    });
+  const lat = parseFloat(pt?.['@_lat']);
+  const lon = parseFloat(pt?.['@_lon']);
+
+  if (isNaN(lat) || isNaN(lon)) {
+    return;
+  }
+
+  trackpoints.push({
+    lat,
+    lon,
+    time: pt.time || null,
+    ele: parseFloat(pt.ele || 0),
+    index: idx
+  });
+});
   }
   
   return trackpoints;
