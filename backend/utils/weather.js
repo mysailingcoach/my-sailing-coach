@@ -1,43 +1,48 @@
 import fetch from 'node-fetch';
 
 /**
- * Fetch wind data for all trackpoints using a single API request.
+ * Fetch wind data for a track and attach it to each trackpoint.
  */
 export async function enrichTrackpointsWithWeather(trackpoints) {
-  if (!trackpoints || trackpoints.length === 0) {
+  if (!Array.isArray(trackpoints) || trackpoints.length === 0) {
     return;
   }
 
   try {
-    const firstPoint = trackpoints.find(
-      pt =>
-        pt &&
-        pt.lat != null &&
-        pt.lon != null &&
-        pt.time
+    // Use the middle valid point instead of the first
+    const validPoints = trackpoints.filter(
+      p => p && p.lat != null && p.lon != null && p.time
     );
 
-    if (!firstPoint) {
+    if (validPoints.length === 0) {
       console.log('No valid trackpoints for weather lookup');
       return;
     }
 
-    const raceDate = new Date(firstPoint.time);
-    const today = new Date();
+    const weatherPoint =
+      validPoints[Math.floor(validPoints.length / 2)];
 
-    const day = raceDate.toISOString().split('T')[0];
+    const raceDate = new Date(weatherPoint.time);
+
+    if (isNaN(raceDate)) {
+      console.log('Invalid race date');
+      return;
+    }
+
+    const raceDay = raceDate.toISOString().slice(0, 10);
+    const todayDay = new Date().toISOString().slice(0, 10);
 
     const apiBase =
-      raceDate > today
+      raceDay >= todayDay
         ? 'https://api.open-meteo.com/v1/forecast'
         : 'https://archive-api.open-meteo.com/v1/archive';
 
     const url =
-      `${apiBase}?latitude=${firstPoint.lat}` +
-      `&longitude=${firstPoint.lon}` +
+      `${apiBase}?latitude=${weatherPoint.lat}` +
+      `&longitude=${weatherPoint.lon}` +
       `&hourly=wind_speed_10m,wind_direction_10m` +
-      `&start_date=${day}` +
-      `&end_date=${day}` +
+      `&start_date=${raceDay}` +
+      `&end_date=${raceDay}` +
       `&timezone=UTC`;
 
     console.log('Weather URL:', url);
@@ -45,64 +50,70 @@ export async function enrichTrackpointsWithWeather(trackpoints) {
     const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error(`Weather API error ${response.status}`);
+      throw new Error(`Weather API returned ${response.status}`);
     }
 
     const data = await response.json();
 
-    console.log(
-      'Weather API returned',
-      data?.hourly?.time?.length || 0,
-      'hourly records'
-    );
-
     if (
       !data.hourly ||
-      !data.hourly.time ||
+      !Array.isArray(data.hourly.time) ||
       data.hourly.time.length === 0
     ) {
-      console.log('No weather data returned');
+      console.log('No hourly weather data returned');
       return;
     }
 
-    const weatherByHour = {};
+    // Build lookup map
+    const weatherByHour = new Map();
 
     data.hourly.time.forEach((time, index) => {
-      weatherByHour[time] = {
+      weatherByHour.set(time, {
         speed: data.hourly.wind_speed_10m?.[index] ?? null,
         direction: data.hourly.wind_direction_10m?.[index] ?? null,
         time
-      };
+      });
     });
 
     let attached = 0;
 
-    trackpoints.forEach(point => {
-      if (!point.time) return;
+    for (const point of trackpoints) {
+      if (!point.time) continue;
 
-      const pointDate = new Date(point.time);
+      const date = new Date(point.time);
 
-      const hourKey =
-        pointDate.getUTCFullYear() +
-        '-' +
-        String(pointDate.getUTCMonth() + 1).padStart(2, '0') +
-        '-' +
-        String(pointDate.getUTCDate()).padStart(2, '0') +
-        'T' +
-        String(pointDate.getUTCHours()).padStart(2, '0') +
-        ':00';
+      if (isNaN(date)) continue;
 
-      const weather = weatherByHour[hourKey];
+      // Matches Open-Meteo format exactly
+      const hourKey = date.toISOString().slice(0, 13) + ':00';
+
+      const weather = weatherByHour.get(hourKey);
 
       if (weather) {
         point.wind = weather;
         attached++;
       }
-    });
+    }
 
     console.log(
-      `Weather attached to ${attached} of ${trackpoints.length} trackpoints`
+      `Weather attached to ${attached}/${trackpoints.length} trackpoints`
     );
+
+    if (attached === 0) {
+      console.warn(
+        'No weather matched any trackpoints. This usually indicates a timezone mismatch.'
+      );
+
+      console.log(
+        'Example GPX hour:',
+        new Date(trackpoints[0].time).toISOString().slice(0, 13) + ':00'
+      );
+
+      console.log(
+        'First weather hour:',
+        data.hourly.time[0]
+      );
+    }
 
     if (trackpoints[0]?.wind) {
       console.log('Sample wind:', trackpoints[0].wind);
