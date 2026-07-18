@@ -1,21 +1,37 @@
 import 'dotenv/config';
+
 import express from 'express';
 import cors from 'cors';
 import multer from 'multer';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 
 import { parseGPXFile } from './utils/gpxParser.js';
-import { initDatabase, saveRace, updateRaceData } from './utils/database.js';
+import {
+  initDatabase,
+  saveRace,
+  updateRaceData
+} from './utils/database.js';
+
 import { analyzeRaceAI } from './utils/aiWorker.js';
 import { enrichTrackpointsWithWeather } from './utils/weather.js';
+
+import raceRoutes from './routes/races.js';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+
 const app = express();
+
 const PORT = process.env.PORT || 5000;
+
+
+// --------------------
+// CORS
+// --------------------
 
 const allowedOrigins = [
   'http://localhost:3000',
@@ -23,67 +39,122 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
   process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
-    : null,
+    : null
 ].filter(Boolean);
 
-// Middleware
+
 app.use(
   cors({
-    origin: allowedOrigins.length > 0 ? allowedOrigins : true,
-    credentials: true,
+    origin:
+      allowedOrigins.length > 0
+        ? allowedOrigins
+        : true,
+    credentials: true
   })
 );
+
 
 app.use(express.json());
 
 
+// --------------------
 // Upload folder
-const uploadDir = path.join(__dirname, 'uploads');
+// --------------------
+
+const uploadDir =
+  path.join(__dirname, 'uploads');
+
 
 if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+  fs.mkdirSync(uploadDir, {
+    recursive: true
+  });
 }
 
 
-// Multer setup
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
+// --------------------
+// Multer
+// --------------------
 
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname);
-  },
-});
+const storage =
+  multer.diskStorage({
+
+    destination(req, file, cb) {
+      cb(null, uploadDir);
+    },
 
 
-const upload = multer({
-  storage,
+    filename(req, file, cb) {
 
-  fileFilter: (req, file, cb) => {
-    if (
-      file.mimetype === 'application/gpx+xml' ||
-      file.originalname.endsWith('.gpx')
-    ) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only GPX files are allowed'), false);
+      cb(
+        null,
+        Date.now() +
+        '-' +
+        file.originalname
+      );
+
     }
-  },
-});
+
+  });
 
 
+
+const upload =
+  multer({
+
+    storage,
+
+
+    fileFilter(req, file, cb) {
+
+      if (
+        file.originalname
+          .toLowerCase()
+          .endsWith('.gpx')
+      ) {
+
+        cb(null, true);
+
+      } else {
+
+        cb(
+          new Error(
+            'Only GPX files are allowed'
+          ),
+          false
+        );
+
+      }
+
+    }
+
+  });
+
+
+
+// --------------------
 // Database
-initDatabase();
+// --------------------
+
+await initDatabase();
 
 
+
+// --------------------
 // Routes
-import raceRoutes from './routes/races.js';
+// --------------------
 
-app.use('/api/races', raceRoutes);
+app.use(
+  '/api/races',
+  raceRoutes
+);
 
 
+
+// --------------------
 // Upload GPX
+// --------------------
+
 app.post(
   '/api/upload',
   upload.single('gpx'),
@@ -91,42 +162,78 @@ app.post(
 
     try {
 
+
       if (!req.file) {
+
         return res.status(400).json({
-          error: 'No file uploaded',
+
+          error:
+            'No GPX file uploaded'
+
         });
+
       }
 
 
-      const filePath = req.file.path;
-
-
-      console.log('Parsing GPX...');
-
-      const raceData = await parseGPXFile(filePath);
-
 
       console.log(
-        'GPX parsed:',
-        Object.keys(raceData)
+        'Processing:',
+        req.file.originalname
       );
 
 
-      /*
-        WEATHER ENRICHMENT
-      */
+
+      const filePath =
+        req.file.path;
+
+
+
+      // Parse GPX
+
+      const raceData =
+        await parseGPXFile(filePath);
+
+
+
+      console.log(
+        'Trackpoints:',
+        raceData.trackpoints?.length
+      );
+
+
+
+      // --------------------
+      // WEATHER
+      // --------------------
 
       if (
-        raceData.trackpoints &&
+        Array.isArray(
+          raceData.trackpoints
+        ) &&
         raceData.trackpoints.length > 0
       ) {
 
+
         console.log(
-          'Adding weather data...'
+          'Starting weather enrichment...'
         );
+
 
         await enrichTrackpointsWithWeather(
           raceData.trackpoints
+        );
+
+
+        const weatherCount =
+          raceData.trackpoints.filter(
+            p => p.wind
+          ).length;
+
+
+
+        console.log(
+          'Weather attached:',
+          weatherCount
         );
 
 
@@ -135,65 +242,96 @@ app.post(
           raceData.trackpoints[0]
         );
 
+
       } else {
 
+
         console.log(
-          'No trackpoints found for weather'
+          'No trackpoints found'
         );
+
 
       }
 
 
 
-      const raceId = await saveRace({
 
-        name:
-          req.body.raceName ||
-          req.file.originalname.replace('.gpx', ''),
+      // Save race
 
-        filePath,
+      const raceId =
+        await saveRace({
 
-        data: raceData,
-
-        uploadDate: new Date(),
-
-      });
+          name:
+            req.body.raceName ||
+            req.file.originalname
+              .replace('.gpx',''),
 
 
+          filePath,
 
-      // Return processed data
+
+          data: raceData,
+
+
+          uploadDate:
+            new Date()
+
+        });
+
+
+
+      console.log(
+        'Race saved:',
+        raceId
+      );
+
+
+
+      // Return finished data
+
       res.json({
 
-        success: true,
+        success:true,
 
         raceId,
 
         message:
-          'GPX file processed successfully',
+          'GPX processed successfully',
 
-        data: raceData,
+        data:
+          raceData
 
       });
 
 
 
-      // AI analysis in background
-      (async () => {
+
+      // AI runs after response
+
+      (async()=>{
 
         try {
 
+
           const ai =
             await analyzeRaceAI({
+
               id: raceId,
-              data: raceData,
+
+              data: raceData
+
             });
+
 
 
           raceData.analysis =
             raceData.analysis || {};
 
 
-          raceData.analysis.ai = ai;
+
+          raceData.analysis.ai =
+            ai;
+
 
 
           await updateRaceData(
@@ -202,68 +340,106 @@ app.post(
           );
 
 
+
           console.log(
-            'AI analysis saved for race',
+            'AI saved:',
             raceId
           );
 
 
-        } catch (e) {
+
+        } catch(error) {
+
 
           console.error(
-            'AI analysis error:',
-            e
+            'AI error:',
+            error
           );
 
+
         }
+
 
       })();
 
 
-    } catch (error) {
+
+    } catch(error) {
+
 
       console.error(
-        'Upload error:',
+        'Upload failed:',
         error
       );
 
 
       res.status(500).json({
-        error: error.message,
+
+        error:
+          error.message
+
       });
 
+
     }
+
 
   }
 );
 
 
-// Health check
-app.get('/api/health', (req, res) => {
 
-  res.json({
-    status: 'OK',
-  });
+// --------------------
+// Health
+// --------------------
 
-});
+app.get(
+  '/api/health',
+  (req,res)=>{
+
+    res.json({
+
+      status:'OK',
+
+      service:
+        'My Sailing Coach API'
+
+    });
+
+  }
+);
 
 
-app.get('/', (req, res) => {
 
-  res.json({
-    status: 'OK',
-    message:
-      'My Sailing Coach API is running',
-  });
+app.get(
+  '/',
+  (req,res)=>{
 
-});
+    res.json({
+
+      status:'OK',
+
+      message:
+        'My Sailing Coach API is running'
+
+    });
+
+  }
+);
 
 
 
-app.listen(PORT, () => {
+// --------------------
+// Start server
+// --------------------
 
-  console.log(
-    `🚀 My Free Sailing Coach API running on port ${PORT}`
-  );
+app.listen(
+  PORT,
+  ()=>{
 
-});
+    console.log(
+      `🚀 API running on port ${PORT}`
+    );
+
+  }
+);
