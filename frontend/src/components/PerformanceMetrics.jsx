@@ -14,7 +14,7 @@ export default function PerformanceMetrics({ analysis }) {
       </div>
     );
   }
-
+console.log('Analysis object:', analysis);
   const metrics = [
     {
       label: 'Total Distance',
