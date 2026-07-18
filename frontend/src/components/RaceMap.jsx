@@ -87,14 +87,28 @@ export default function RaceMap({ trackpoints = [], marks = [] }) {
         ]}
       >
         <Popup>
-          <div>
-            <strong>Start</strong>
-            <br />
-            {startPoint.time
-              ? new Date(startPoint.time).toLocaleTimeString()
-              : 'Unknown'}
-          </div>
-        </Popup>
+  <div>
+    <strong>Start</strong>
+    <br />
+
+    Time:
+    <br />
+    {startPoint.time
+      ? new Date(startPoint.time).toLocaleTimeString()
+      : 'Unknown'}
+
+    {startPoint.wind && (
+      <>
+        <hr />
+        <strong>Wind</strong>
+        <br />
+        {startPoint.wind.speed} km/h
+        <br />
+        {startPoint.wind.direction}°
+      </>
+    )}
+  </div>
+</Popup>
       </Marker>
 
       <Marker
