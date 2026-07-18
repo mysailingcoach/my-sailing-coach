@@ -9,7 +9,7 @@ import {
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Fix marker icons
+// Fix Leaflet marker icons
 delete L.Icon.Default.prototype._getIconUrl;
 
 L.Icon.Default.mergeOptions({
@@ -21,9 +21,12 @@ L.Icon.Default.mergeOptions({
     'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png'
 });
 
-export default function RaceMap({ trackpoints = [], marks = [] }) {
+export default function RaceMap({
+  trackpoints = [],
+  marks = []
+}) {
   const validTrackpoints = trackpoints.filter(
-    (pt) =>
+    pt =>
       pt &&
       pt.lat != null &&
       pt.lon != null &&
@@ -33,19 +36,20 @@ export default function RaceMap({ trackpoints = [], marks = [] }) {
 
   if (validTrackpoints.length === 0) {
     return (
-      <div className="h-96 flex items-center justify-center text-gray-500">
+      <div className="p-8 text-center text-gray-500">
         No valid GPS tracking data available
       </div>
     );
   }
 
-  const positions = validTrackpoints.map((pt) => [
+  const positions = validTrackpoints.map(pt => [
     Number(pt.lat),
     Number(pt.lon)
   ]);
 
   const startPoint = validTrackpoints[0];
-  const endPoint = validTrackpoints[validTrackpoints.length - 1];
+  const endPoint =
+    validTrackpoints[validTrackpoints.length - 1];
 
   const center = [
     Number(startPoint.lat),
@@ -53,33 +57,52 @@ export default function RaceMap({ trackpoints = [], marks = [] }) {
   ];
 
   const validMarks = (marks || []).filter(
-    (m) =>
-      m &&
-      m.lat != null &&
-      m.lon != null &&
-      !isNaN(m.lat) &&
-      !isNaN(m.lon)
+    mark =>
+      mark &&
+      mark.lat != null &&
+      mark.lon != null &&
+      !isNaN(mark.lat) &&
+      !isNaN(mark.lon)
+  );
+
+  const weatherPoints = validTrackpoints.filter(
+    pt => pt.wind
+  );
+
+  console.log(
+    'Trackpoints:',
+    validTrackpoints.length
+  );
+
+  console.log(
+    'Trackpoints with wind:',
+    weatherPoints.length
   );
 
   return (
     <MapContainer
       center={center}
       zoom={13}
-      style={{ height: '500px', width: '100%' }}
+      style={{
+        height: '600px',
+        width: '100%'
+      }}
       className="z-0"
     >
       <TileLayer
+        attribution='&copy; OpenStreetMap contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution="&copy; OpenStreetMap contributors"
       />
 
+      {/* Race Track */}
       <Polyline
         positions={positions}
         color="blue"
-        weight={3}
+        weight={4}
         opacity={0.8}
       />
 
+      {/* Start */}
       <Marker
         position={[
           Number(startPoint.lat),
@@ -87,30 +110,42 @@ export default function RaceMap({ trackpoints = [], marks = [] }) {
         ]}
       >
         <Popup>
-  <div>
-    <strong>Start</strong>
-    <br />
+          <div>
+            <strong>Start</strong>
 
-    Time:
-    <br />
-    {startPoint.time
-      ? new Date(startPoint.time).toLocaleTimeString()
-      : 'Unknown'}
+            <br />
+            <br />
 
-    {startPoint.wind && (
-      <>
-        <hr />
-        <strong>Wind</strong>
-        <br />
-        {startPoint.wind.speed} km/h
-        <br />
-        {startPoint.wind.direction}°
-      </>
-    )}
-  </div>
-</Popup>
+            Time:
+            <br />
+            {startPoint.time
+              ? new Date(
+                  startPoint.time
+                ).toLocaleTimeString()
+              : 'Unknown'}
+
+            {startPoint.wind && (
+              <>
+                <hr />
+
+                <strong>Wind</strong>
+
+                <br />
+                Speed:
+                {' '}
+                {startPoint.wind.speed}
+
+                <br />
+                Direction:
+                {' '}
+                {startPoint.wind.direction}°
+              </>
+            )}
+          </div>
+        </Popup>
       </Marker>
 
+      {/* Finish */}
       <Marker
         position={[
           Number(endPoint.lat),
@@ -120,17 +155,43 @@ export default function RaceMap({ trackpoints = [], marks = [] }) {
         <Popup>
           <div>
             <strong>Finish</strong>
+
+            <br />
+            <br />
+
+            Time:
             <br />
             {endPoint.time
-              ? new Date(endPoint.time).toLocaleTimeString()
+              ? new Date(
+                  endPoint.time
+                ).toLocaleTimeString()
               : 'Unknown'}
+
+            {endPoint.wind && (
+              <>
+                <hr />
+
+                <strong>Wind</strong>
+
+                <br />
+                Speed:
+                {' '}
+                {endPoint.wind.speed}
+
+                <br />
+                Direction:
+                {' '}
+                {endPoint.wind.direction}°
+              </>
+            )}
           </div>
         </Popup>
       </Marker>
 
+      {/* Course Marks */}
       {validMarks.map((mark, index) => (
         <Marker
-          key={index}
+          key={`mark-${index}`}
           position={[
             Number(mark.lat),
             Number(mark.lon)
@@ -139,13 +200,59 @@ export default function RaceMap({ trackpoints = [], marks = [] }) {
           <Popup>
             <div>
               <strong>
-                {mark.name || `Mark ${index + 1}`}
+                {mark.name ||
+                  `Mark ${index + 1}`}
               </strong>
-              {mark.desc && <div>{mark.desc}</div>}
+
+              {mark.desc && (
+                <>
+                  <br />
+                  {mark.desc}
+                </>
+              )}
             </div>
           </Popup>
         </Marker>
       ))}
+
+      {/* Wind Points */}
+      {validTrackpoints
+        .filter((pt, index) => index % 25 === 0)
+        .filter(pt => pt.wind)
+        .map((pt, index) => (
+          <Marker
+            key={`wind-${index}`}
+            position={[
+              Number(pt.lat),
+              Number(pt.lon)
+            ]}
+          >
+            <Popup>
+              <div>
+                <strong>Wind Data</strong>
+
+                <br />
+                <br />
+
+                Speed:
+                {' '}
+                {pt.wind.speed}
+
+                <br />
+
+                Direction:
+                {' '}
+                {pt.wind.direction}°
+
+                <br />
+
+                Time:
+                <br />
+                {pt.wind.time}
+              </div>
+            </Popup>
+          </Marker>
+        ))}
     </MapContainer>
   );
 }
