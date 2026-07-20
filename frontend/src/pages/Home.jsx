@@ -96,7 +96,7 @@ export default function Home() {
           <div className="flex flex-wrap gap-6 mt-10 text-sm">
             <div>✓ Interactive Maps</div>
             <div>✓ Speed Analysis</div>
-            <div>✓ Performance Metrics</div>
+            <div>✓ Leg + Maneuver Analytics</div>
             <div>✓ Unlimited Uploads</div>
           </div>
         </div>
@@ -211,10 +211,10 @@ export default function Home() {
 
               <div>
                 <div className="font-semibold">
-                  ⚡ Speed Analysis
+                  ⚡ Advanced Metrics
                 </div>
                 <div className="text-sm text-slate-500">
-                  Average, peak and segment speeds.
+                  VMG, TWA, heading and performance index.
                 </div>
               </div>
 
@@ -229,10 +229,10 @@ export default function Home() {
 
               <div>
                 <div className="font-semibold">
-                  ⏱ Race Duration
+                  🔄 Maneuver Detection
                 </div>
                 <div className="text-sm text-slate-500">
-                  Timing and session statistics.
+                  Auto-detected tacks/gybes with efficiency scoring.
                 </div>
               </div>
             </div>
