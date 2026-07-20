@@ -8,6 +8,9 @@ const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'sailing-coach-secret-key-change-in-production';
 const JWT_EXPIRES_IN = '7d';
 
+// TODO: Re-enable login by setting LOGIN_DISABLED to false once the feature is ready.
+const LOGIN_DISABLED = true;
+
 // POST /api/auth/signup
 router.post('/signup', async (req, res) => {
   try {
@@ -43,6 +46,11 @@ router.post('/signup', async (req, res) => {
 
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
+  // TODO: Remove this guard once login is re-enabled (set LOGIN_DISABLED = false above).
+  if (LOGIN_DISABLED) {
+    return res.status(503).json({ error: 'Login is temporarily unavailable. Please try again later.' });
+  }
+
   try {
     const { email, password } = req.body;
 
