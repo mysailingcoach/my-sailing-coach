@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import RaceDetail from './pages/RaceDetail';
 import './index.css';
+import './styles/animations.css';
 
 export default function App() {
   return (

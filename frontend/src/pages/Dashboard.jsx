@@ -36,60 +36,100 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-96">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading your races...</p>
-        </div>
+      <div className="flex flex-col justify-center items-center h-96 gap-5 animate-fade-in">
+        <div
+          className="w-12 h-12 rounded-full border-2 border-t-transparent animate-spin"
+          style={{ borderColor: 'rgba(59,130,246,0.3)', borderTopColor: '#3b82f6' }}
+        />
+        <p style={{ color: 'var(--color-text-muted)' }}>Loading your races…</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in">
+
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-md p-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Your Races</h1>
-        <p className="text-gray-600">Review and analyze your sailing races</p>
+      <div
+        className="rounded-2xl p-8 animate-slide-up"
+        style={{
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
+        }}
+      >
+        <h1 className="text-3xl font-bold mb-1">Your Races</h1>
+        <p style={{ color: 'var(--color-text-muted)' }}>Review and analyze your sailing performance</p>
       </div>
 
+      {/* Error */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg">
+        <div
+          className="rounded-xl px-5 py-4 text-sm animate-scale-in"
+          style={{
+            background: 'rgba(248,113,113,0.08)',
+            border: '1px solid rgba(248,113,113,0.2)',
+            color: 'var(--color-error)',
+          }}
+        >
           {error}
         </div>
       )}
 
+      {/* Empty state */}
       {races.length === 0 ? (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-12 text-center">
-          <p className="text-xl text-gray-700 mb-4">No races uploaded yet</p>
-          <p className="text-gray-600 mb-6">Start by uploading your first GPX file to analyze your sailing performance.</p>
-          <Link to="/" className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition">
+        <div
+          className="rounded-2xl p-16 text-center animate-slide-up-1"
+          style={{
+            background: 'var(--color-surface)',
+            border: '1px dashed rgba(59,130,246,0.3)',
+          }}
+        >
+          <div className="text-5xl mb-5 animate-float inline-block">⛵</div>
+          <p className="text-xl font-semibold mb-2">No races uploaded yet</p>
+          <p className="text-sm mb-8" style={{ color: 'var(--color-text-muted)' }}>
+            Start by uploading your first GPX file to analyze your sailing performance.
+          </p>
+          <Link
+            to="/"
+            className="btn-gradient inline-flex px-6 py-3 rounded-xl text-sm font-bold"
+          >
             Upload Your First Race
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {races.map(race => (
-            <div key={race.id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition overflow-hidden">
-              <div className="p-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-2">{race.name}</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  {new Date(race.uploadDate || race.createdAt).toLocaleDateString()}
-                </p>
-                <div className="flex gap-2">
-                  <Link
-                    to={`/race/${race.id}`}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded text-center transition"
-                  >
-                    View Details
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(race.id)}
-                    className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold rounded transition"
-                  >
-                    Delete
-                  </button>
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {races.map((race, i) => (
+            <div
+              key={race.id}
+              className="card animate-slide-up"
+              style={{ animationDelay: `${i * 0.06}s` }}
+            >
+              <div className="flex items-start justify-between gap-2 mb-4">
+                <h3 className="text-base font-bold leading-snug">{race.name}</h3>
+                <span className="badge badge-blue shrink-0">
+                  ⛵
+                </span>
+              </div>
+
+              <p className="text-xs mb-5" style={{ color: 'var(--color-text-muted)' }}>
+                {new Date(race.uploadDate || race.createdAt).toLocaleDateString(undefined, {
+                  year: 'numeric', month: 'short', day: 'numeric'
+                })}
+              </p>
+
+              <div className="flex gap-2">
+                <Link
+                  to={`/race/${race.id}`}
+                  className="btn-gradient flex-1 py-2 rounded-lg text-sm text-center font-semibold"
+                >
+                  View Details
+                </Link>
+                <button
+                  onClick={() => handleDelete(race.id)}
+                  className="btn-danger px-4 py-2 rounded-lg text-sm"
+                >
+                  Delete
+                </button>
               </div>
             </div>
           ))}
