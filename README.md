@@ -7,6 +7,9 @@ My Free Sailing Coach is a free, open-source sailing performance analysis app th
 - 📤 Upload GPX files from watches, phones, or sailing apps
 - 🗺️ View the route on an interactive map
 - 📊 Review distance, duration, speed, and race details
+- 🧭 Analyze auto-detected legs (upwind/downwind/reaching), VMG/TWA, and maneuver efficiency
+- 🎥 Sync race video metadata and jump to maneuver moments
+- 📈 Compare race performance against historical trends
 - 💾 Keep a local history of uploaded races
 - 🌐 Run locally or deploy it to GitHub-connected hosting platforms
 
@@ -56,6 +59,7 @@ If you are using a hosted backend, set VITE_API_URL to the deployed API URL inst
 - POST /api/upload - upload and process a GPX file
 - GET /api/races - list races
 - GET /api/races/:id - get race details
+- PATCH /api/races/:id/video - save video sync metadata
 - DELETE /api/races/:id - delete a race
 - GET /api/health - health check
 

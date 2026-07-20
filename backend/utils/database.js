@@ -7,6 +7,39 @@ const dbPath = path.join(__dirname, '..', 'sailingcoach.db');
 
 let db;
 
+function parseRaceData(rawData) {
+  if (!rawData) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(rawData);
+  } catch (error) {
+    console.warn('Failed to parse race data JSON');
+    return {};
+  }
+}
+
+function buildRaceSummary(row) {
+  const data = parseRaceData(row.data);
+  const analysis = data.analysis || {};
+
+  return {
+    id: row.id,
+    name: row.name,
+    uploadDate: row.uploadDate,
+    createdAt: row.createdAt,
+    avgSpeed: analysis.avgSpeed ?? 0,
+    maxSpeed: analysis.maxSpeed ?? 0,
+    totalDistance: analysis.totalDistance ?? 0,
+    totalTime: analysis.totalTime ?? 0,
+    performanceIndex:
+      analysis.performanceIndex?.score ?? 0,
+    maneuverCount:
+      analysis.maneuverSummary?.total ?? 0
+  };
+}
+
 export function initDatabase() {
   return new Promise((resolve, reject) => {
     db = new sqlite3.Database(dbPath, (err) => {
@@ -69,11 +102,11 @@ export function saveRace(raceData) {
 export function getRaces() {
   return new Promise((resolve, reject) => {
     db.all(`
-      SELECT id, name, uploadDate, createdAt FROM races 
+      SELECT id, name, uploadDate, createdAt, data FROM races 
       ORDER BY createdAt DESC
     `, (err, rows) => {
       if (err) reject(err);
-      else resolve(rows || []);
+      else resolve((rows || []).map(buildRaceSummary));
     });
   });
 }
@@ -86,7 +119,7 @@ export function getRaceById(id) {
       if (err) reject(err);
       else {
         if (row) {
-          row.data = JSON.parse(row.data);
+          row.data = parseRaceData(row.data);
         }
         resolve(row);
       }
@@ -109,6 +142,27 @@ export function updateRaceData(id, newData) {
       if (err) reject(err);
       else resolve(this.changes > 0);
     });
+  });
+}
+
+export function getRaceAnalyses() {
+  return new Promise((resolve, reject) => {
+    db.all(
+      `SELECT id, name, data, createdAt, uploadDate FROM races ORDER BY createdAt DESC`,
+      (err, rows) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        resolve(
+          (rows || []).map(row => ({
+            ...row,
+            data: parseRaceData(row.data)
+          }))
+        );
+      }
+    );
   });
 }
 

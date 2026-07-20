@@ -6,8 +6,12 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import rateLimit from 'express-rate-limit';
 
-import { parseGPXFile } from './utils/gpxParser.js';
+import {
+  parseGPXContent,
+  computeAdvancedAnalysis
+} from './utils/gpxParser.js';
 import {
   initDatabase,
   saveRace,
@@ -28,6 +32,8 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 const PORT = process.env.PORT || 5000;
+const UPLOAD_RATE_LIMIT =
+  Number(process.env.UPLOAD_RATE_LIMIT) || 15;
 
 
 // --------------------
@@ -77,26 +83,7 @@ if (!fs.existsSync(uploadDir)) {
 // Multer
 // --------------------
 
-const storage =
-  multer.diskStorage({
-
-    destination(req, file, cb) {
-      cb(null, uploadDir);
-    },
-
-
-    filename(req, file, cb) {
-
-      cb(
-        null,
-        Date.now() +
-        '-' +
-        file.originalname
-      );
-
-    }
-
-  });
+const storage = multer.memoryStorage();
 
 
 
@@ -131,6 +118,17 @@ const upload =
 
   });
 
+const uploadRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: UPLOAD_RATE_LIMIT,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    error:
+      'Too many uploads. Please wait and try again.'
+  }
+});
+
 
 
 // --------------------
@@ -163,6 +161,7 @@ app.use(
 
 app.post(
   '/api/upload',
+  uploadRateLimiter,
   upload.single('gpx'),
   async (req, res) => {
 
@@ -189,15 +188,11 @@ app.post(
 
 
 
-      const filePath =
-        req.file.path;
+      const rawGpx = req.file.buffer?.toString(
+        'utf8'
+      );
 
-
-
-      // Parse GPX
-
-      const raceData =
-        await parseGPXFile(filePath);
+      const raceData = parseGPXContent(rawGpx);
 
 
 
@@ -259,6 +254,13 @@ app.post(
 
       }
 
+      raceData.analysis =
+        computeAdvancedAnalysis(
+          raceData.trackpoints || [],
+          raceData.marks || [],
+          raceData.analysis
+        );
+
 
 
 
@@ -273,7 +275,7 @@ app.post(
               .replace('.gpx',''),
 
 
-          filePath,
+          filePath: null,
 
 
           data: raceData,

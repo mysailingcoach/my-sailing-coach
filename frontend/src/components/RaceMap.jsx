@@ -138,7 +138,8 @@ function getPerformanceColor(trackpoint) {
 
 export default function RaceMap({
   trackpoints = [],
-  marks = []
+  marks = [],
+  maneuvers: providedManeuvers = []
 }) {
   const validTrackpoints = trackpoints.filter(
     pt =>
@@ -179,59 +180,72 @@ export default function RaceMap({
   );
 const maneuvers = [];
 
-for (
-  let i = 20;
-  i < validTrackpoints.length - 20;
-  i++
-) {
-  const pt = validTrackpoints[i];
-
-  if (
-    !pt.wind ||
-    pt.heading == null ||
-    validTrackpoints[i - 20]?.heading == null ||
-    validTrackpoints[i + 20]?.heading == null
-  ) {
-    continue;
-  }
-
-  const before =
-    relativeWindAngle(
-      validTrackpoints[i - 20].heading,
-      pt.wind.direction
+if (providedManeuvers.length > 0) {
+  providedManeuvers.forEach(maneuver => {
+    const point = validTrackpoints.find(
+      p => p.index === maneuver.index
     );
 
-  const after =
-    relativeWindAngle(
-      validTrackpoints[i + 20].heading,
-      pt.wind.direction
-    );
-
-  // Tack
-  if (
-    (before < -30 && after > 30) ||
-    (before > 30 && after < -30)
+    if (point) {
+      maneuvers.push({
+        type: maneuver.type,
+        point
+      });
+    }
+  });
+} else {
+  for (
+    let i = 20;
+    i < validTrackpoints.length - 20;
+    i++
   ) {
-    maneuvers.push({
-      type: 'Tack',
-      point: pt
-    });
+    const pt = validTrackpoints[i];
 
-    i += 50;
-    continue;
-  }
+    if (
+      !pt.wind ||
+      pt.heading == null ||
+      validTrackpoints[i - 20]?.heading == null ||
+      validTrackpoints[i + 20]?.heading == null
+    ) {
+      continue;
+    }
 
-  // Gybe
- if (
-  (before < -120 && after > 120) ||
-  (before > 120 && after < -120)
-) {
-    maneuvers.push({
-      type: 'Gybe',
-      point: pt
-    });
+    const before =
+      relativeWindAngle(
+        validTrackpoints[i - 20].heading,
+        pt.wind.direction
+      );
 
-    i += 50;
+    const after =
+      relativeWindAngle(
+        validTrackpoints[i + 20].heading,
+        pt.wind.direction
+      );
+
+    if (
+      (before < -30 && after > 30) ||
+      (before > 30 && after < -30)
+    ) {
+      maneuvers.push({
+        type: 'Tack',
+        point: pt
+      });
+
+      i += 50;
+      continue;
+    }
+
+    if (
+      (before < -120 && after > 120) ||
+      (before > 120 && after < -120)
+    ) {
+      maneuvers.push({
+        type: 'Gybe',
+        point: pt
+      });
+
+      i += 50;
+    }
   }
 }
   return (
@@ -364,7 +378,13 @@ for (
       Number(m.point.lat),
       Number(m.point.lon)
     ]}
-    icon={tackIcon}
+    icon={L.divIcon({
+      ...tackIcon.options,
+      html: tackIcon.options.html.replace(
+        '#2563eb',
+        m.type === 'Gybe' ? '#b45309' : '#2563eb'
+      )
+    })}
   >
     <Popup>
       <div>
