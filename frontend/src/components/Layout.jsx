@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { LOGIN_DISABLED } from '../config/featureFlags';
 
 export default function Layout({ children }) {
   const { pathname } = useLocation();
@@ -76,12 +77,15 @@ export default function Layout({ children }) {
                 </div>
               ) : (
                 <div className="flex items-center gap-2 ml-2">
-                  <Link
-                    to="/login"
-                    className="px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 text-[#7a8899] hover:text-white hover:bg-white/06"
-                  >
-                    Sign in
-                  </Link>
+                  {/* TODO: Remove LOGIN_DISABLED check to restore the Sign in link (set LOGIN_DISABLED = false in src/config/featureFlags.js). */}
+                  {!LOGIN_DISABLED && (
+                    <Link
+                      to="/login"
+                      className="px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 text-[#7a8899] hover:text-white hover:bg-white/06"
+                    >
+                      Sign in
+                    </Link>
+                  )}
                   <Link
                     to="/signup"
                     className="btn-gradient text-sm px-4 py-2 rounded-lg"

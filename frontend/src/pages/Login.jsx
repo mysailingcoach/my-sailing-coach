@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AuthLayout from '../components/AuthLayout';
 import AuthInput from '../components/AuthInput';
+import { LOGIN_DISABLED } from '../config/featureFlags';
 
 function validateEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -60,6 +61,15 @@ export default function Login() {
       title="Welcome back"
       subtitle="Sign in to your account to continue"
     >
+      {/* TODO: Remove this banner once login is re-enabled (set LOGIN_DISABLED = false in src/config/featureFlags.js). */}
+      {LOGIN_DISABLED && (
+        <div className="flex items-start gap-2 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 text-sm mb-2">
+          <svg className="h-4 w-4 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Login is temporarily unavailable. Please try again later.
+        </div>
+      )}
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
         {serverError && (
           <div className="flex items-start gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
@@ -110,7 +120,7 @@ export default function Login() {
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || LOGIN_DISABLED}
           className={[
             'w-full py-3 px-4 rounded-xl font-semibold text-white transition-all duration-200',
             'bg-gradient-to-r from-blue-600 to-cyan-500',
