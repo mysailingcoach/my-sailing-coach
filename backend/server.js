@@ -438,6 +438,18 @@ app.get(
 
 
 // --------------------
+// Error handler
+// --------------------
+
+// Catches multer errors (e.g. wrong file type) and any other
+// synchronous/middleware errors, returning a consistent JSON response.
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  const status = err.status || err.statusCode || 500;
+  res.status(status).json({ error: err.message || 'Internal Server Error' });
+});
+
+// --------------------
 // Start server
 // --------------------
 
