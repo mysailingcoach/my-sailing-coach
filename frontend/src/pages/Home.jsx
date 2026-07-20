@@ -167,21 +167,11 @@ export default function Home() {
             Designed for sailors who want to improve with data.
           </p>
 
-          {/* Feature pills */}
-          <div className="animate-slide-up-3 flex flex-wrap gap-3">
-            {['✓ Interactive Maps', '✓ Speed Analysis', '✓ Performance Metrics', '✓ Unlimited Uploads'].map((pill) => (
-              <span
-                key={pill}
-                className="text-sm px-4 py-1.5 rounded-full font-medium"
-                style={{
-                  background: 'rgba(255,255,255,0.08)',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  color: '#cbd5e1',
-                }}
-              >
-                {pill}
-              </span>
-            ))}
+          <div className="flex flex-wrap gap-6 mt-10 text-sm">
+            <div>✓ Interactive Maps</div>
+            <div>✓ Speed Analysis</div>
+            <div>✓ Leg + Maneuver Analytics</div>
+            <div>✓ Unlimited Uploads</div>
           </div>
         </div>
       </section>
@@ -329,24 +319,30 @@ export default function Home() {
           >
             <h3 className="font-bold text-base mb-5">What You'll Get</h3>
 
-            <div className="space-y-4">
-              {features.map(({ icon, title, desc }) => (
-                <div
-                  key={title}
-                  className="flex gap-3 p-3 rounded-xl transition-colors duration-200"
-                  style={{ cursor: 'default' }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                  }}
-                >
-                  <span className="text-xl mt-0.5 shrink-0">{icon}</span>
-                  <div>
-                    <div className="font-semibold text-sm">{title}</div>
-                    <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{desc}</div>
-                  </div>
+              <div>
+                <div className="font-semibold">
+                  ⚡ Advanced Metrics
+                </div>
+                <div className="text-sm text-slate-500">
+                  VMG, TWA, heading and performance index.
+                </div>
+              </div>
+
+              <div>
+                <div className="font-semibold">
+                  📏 Distance Metrics
+                </div>
+                <div className="text-sm text-slate-500">
+                  Total distance and route efficiency.
+                </div>
+              </div>
+
+              <div>
+                <div className="font-semibold">
+                  🔄 Maneuver Detection
+                </div>
+                <div className="text-sm text-slate-500">
+                  Auto-detected tacks/gybes with efficiency scoring.
                 </div>
               ))}
             </div>

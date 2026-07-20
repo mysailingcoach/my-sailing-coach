@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function PerformanceMetrics({ analysis }) {
+export default function PerformanceMetrics({ analysis, comparative }) {
   const formatNumber = (value, decimals = 1) => {
     return value != null && !isNaN(value)
       ? Number(value).toFixed(decimals)
@@ -14,7 +14,7 @@ export default function PerformanceMetrics({ analysis }) {
       </div>
     );
   }
-console.log('Analysis object:', analysis);
+
   const metrics = [
     {
       label: 'Total Distance',
@@ -45,18 +45,18 @@ console.log('Analysis object:', analysis);
       color: 'orange'
     },
     {
-      label: 'Minimum Speed',
-      value: formatNumber(analysis.minSpeed),
-      unit: 'km/h',
-      icon: '🐢',
-      color: 'red'
+      label: 'Performance Index',
+      value: formatNumber(analysis.performanceIndex?.score),
+      unit: '/100',
+      icon: '🏁',
+      color: 'indigo'
     },
     {
-      label: 'Data Points',
-      value: analysis.pointCount ?? 'N/A',
-      unit: 'points',
-      icon: '📍',
-      color: 'indigo'
+      label: 'Maneuvers',
+      value: analysis.maneuverSummary?.total ?? 0,
+      unit: 'events',
+      icon: '🔄',
+      color: 'red'
     }
   ];
 
@@ -68,6 +68,8 @@ console.log('Analysis object:', analysis);
     red: 'bg-red-50 border-red-200 text-red-700',
     indigo: 'bg-indigo-50 border-indigo-200 text-indigo-700'
   };
+
+  const legRows = (analysis.legs || []).slice(0, 12);
 
   return (
     <div className="space-y-6">
@@ -95,51 +97,174 @@ console.log('Analysis object:', analysis);
         ))}
       </div>
 
-      {analysis?.ai && (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-2">
-            AI Analysis
+          <h3 className="text-lg font-bold text-gray-800 mb-4">
+            Advanced Sailing Metrics
           </h3>
 
-          <p className="text-sm text-gray-700 mb-2">
-            {analysis.ai.summary}
-          </p>
-
-          <div className="flex gap-4">
-            <div className="flex-1 border rounded p-3">
-              <div className="text-xs text-gray-600">
-                Overall Rating
-              </div>
-
-              <div className="text-xl font-bold">
-                {analysis.ai.overallRating}
-              </div>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-600">VMG (avg / max)</span>
+              <span className="font-semibold">
+                {formatNumber(analysis.vmg?.avg, 2)} / {formatNumber(analysis.vmg?.max, 2)} km/h
+              </span>
             </div>
 
-            {analysis.ai.bestLeg && (
-              <div className="flex-1 border rounded p-3">
-                <div className="text-xs text-gray-600">
-                  Best Leg Avg Speed
-                </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">TWA (avg)</span>
+              <span className="font-semibold">
+                {formatNumber(analysis.twa?.avg, 1)}°
+              </span>
+            </div>
 
-                <div className="text-xl font-bold">
-                  {analysis.ai.bestLeg.avgSpeed} km/h
-                </div>
-              </div>
-            )}
+            <div className="flex justify-between">
+              <span className="text-gray-600">SOG vs True Speed</span>
+              <span className="font-semibold">
+                {formatNumber(analysis.sogVsTrueSpeed?.avgSog, 2)} / {formatNumber(analysis.sogVsTrueSpeed?.estimatedTrueSpeed, 2)} km/h
+              </span>
+            </div>
 
-            {analysis.ai.worstLeg && (
-              <div className="flex-1 border rounded p-3">
-                <div className="text-xs text-gray-600">
-                  Worst Leg Avg Speed
-                </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Heading Consistency</span>
+              <span className="font-semibold">
+                {formatNumber(analysis.headingAnalysis?.consistencyScore, 1)}%
+              </span>
+            </div>
 
-                <div className="text-xl font-bold">
-                  {analysis.ai.worstLeg.avgSpeed} km/h
-                </div>
-              </div>
-            )}
+            <div className="flex justify-between">
+              <span className="text-gray-600">Start Timing Score</span>
+              <span className="font-semibold">
+                {formatNumber(analysis.startLine?.startTimingScore, 1)}
+              </span>
+            </div>
           </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">
+            Comparative Analytics
+          </h3>
+
+          {comparative?.hasHistory ? (
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Historical races</span>
+                <span className="font-semibold">{comparative.historyCount}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Avg speed delta</span>
+                <span className={`font-semibold ${comparative.delta?.avgSpeed >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {comparative.delta?.avgSpeed >= 0 ? '+' : ''}
+                  {formatNumber(comparative.delta?.avgSpeed, 2)} km/h
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Performance index delta</span>
+                <span className={`font-semibold ${comparative.delta?.performanceIndex >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {comparative.delta?.performanceIndex >= 0 ? '+' : ''}
+                  {formatNumber(comparative.delta?.performanceIndex, 1)}
+                </span>
+              </div>
+              <div className="pt-2 border-t">
+                <div className="text-gray-600">Personal best segment</div>
+                <div className="font-semibold">
+                  {comparative.personalBestSegment?.type || 'N/A'} ({formatNumber(comparative.personalBestSegment?.avgSpeed, 2)} km/h)
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-600">
+              Upload more races to unlock historical trend comparisons.
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h3 className="text-lg font-bold text-gray-800 mb-4">
+          Leg Analysis
+        </h3>
+
+        {legRows.length === 0 ? (
+          <p className="text-sm text-gray-600">
+            No leg data available for this race.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-3 py-2 text-left">Leg</th>
+                  <th className="px-3 py-2 text-left">Type</th>
+                  <th className="px-3 py-2 text-left">Duration (h)</th>
+                  <th className="px-3 py-2 text-left">Distance (km)</th>
+                  <th className="px-3 py-2 text-left">Avg Speed</th>
+                </tr>
+              </thead>
+              <tbody>
+                {legRows.map((leg, idx) => (
+                  <tr key={`${leg.startIndex}-${leg.endIndex}`} className="border-b">
+                    <td className="px-3 py-2">#{idx + 1}</td>
+                    <td className="px-3 py-2">{leg.type}</td>
+                    <td className="px-3 py-2">{formatNumber(leg.durationHours, 2)}</td>
+                    <td className="px-3 py-2">{formatNumber(leg.distance, 2)}</td>
+                    <td className="px-3 py-2">{formatNumber(leg.avgSpeed, 2)} km/h</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h3 className="text-lg font-bold text-gray-800 mb-4">
+          Maneuver Analysis
+        </h3>
+
+        {(analysis.maneuvers || []).length === 0 ? (
+          <p className="text-sm text-gray-600">
+            No tacks or gybes detected.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {(analysis.maneuvers || []).slice(0, 12).map((maneuver, idx) => (
+              <div key={`${maneuver.index}-${idx}`} className="border rounded p-3 flex items-center justify-between">
+                <div>
+                  <div className="font-semibold">
+                    {maneuver.type} at point {maneuver.index}
+                  </div>
+                  <div className="text-xs text-gray-600">
+                    Δ heading {formatNumber(maneuver.headingChange, 1)}° • speed {formatNumber(maneuver.speedBefore, 2)} → {formatNumber(maneuver.speedAfter, 2)} km/h
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs text-gray-600">Efficiency</div>
+                  <div className="font-semibold">{formatNumber(maneuver.efficiencyScore * 100, 0)}%</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {analysis?.report && (
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h3 className="text-lg font-bold text-gray-800 mb-2">
+            Automated Sailing Report
+          </h3>
+          <p className="text-sm text-gray-700 mb-2">
+            {analysis.report.summary}
+          </p>
+          <p className="text-sm text-gray-600 mb-3">
+            {analysis.report.weatherSummary}
+          </p>
+          <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1">
+            {(analysis.report.recommendations || []).map((item, idx) => (
+              <li key={idx}>{item}</li>
+            ))}
+          </ul>
         </div>
       )}
 

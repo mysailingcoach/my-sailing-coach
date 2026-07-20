@@ -3,7 +3,7 @@ import os from 'os';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { parseGPXFile } from '../utils/gpxParser.js';
+import { parseGPXContent } from '../utils/gpxParser.js';
 
 async function run() {
   // Create a minimal GPX with one track (3 points) and one waypoint
@@ -25,7 +25,8 @@ async function run() {
   fs.writeFileSync(filePath, gpx, 'utf8');
 
   try {
-    const result = await parseGPXFile(filePath);
+    const rawData = fs.readFileSync(filePath, 'utf8');
+    const result = parseGPXContent(rawData);
     // Basic assertions
     if (!result.trackpoints || result.trackpoints.length !== 3) {
       console.error('FAIL: trackpoints length mismatch', result.trackpoints && result.trackpoints.length);
@@ -48,6 +49,26 @@ async function run() {
     if (!hasSog) {
       console.error('FAIL: missing SOG values');
       process.exit(5);
+    }
+
+    if (!Array.isArray(result.analysis?.legs)) {
+      console.error('FAIL: missing leg analysis');
+      process.exit(6);
+    }
+
+    if (!Array.isArray(result.analysis?.maneuvers)) {
+      console.error('FAIL: missing maneuver analysis');
+      process.exit(7);
+    }
+
+    if (!result.analysis?.vmg || !result.analysis?.twa) {
+      console.error('FAIL: missing advanced metrics');
+      process.exit(8);
+    }
+
+    if (!result.analysis?.startLine) {
+      console.error('FAIL: missing start line analysis');
+      process.exit(9);
     }
 
     console.log('PASS: gpxParser basic checks');
