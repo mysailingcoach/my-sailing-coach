@@ -1,8 +1,16 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function Layout({ children }) {
   const { pathname } = useLocation();
+  const { isAuthenticated, user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    logout();
+    navigate('/login');
+  }
 
   const navLink = (to, label) => {
     const active = pathname === to;
@@ -52,13 +60,36 @@ export default function Layout({ children }) {
             {/* Nav links */}
             <div className="flex items-center gap-1">
               {navLink('/', 'Upload')}
-              {navLink('/dashboard', 'Dashboard')}
-              <a
-                href="#"
-                className="px-3 py-2 text-sm font-medium text-[#7a8899] hover:text-white hover:bg-white/06 rounded-lg transition-all duration-200"
-              >
-                Help
-              </a>
+              {isAuthenticated && navLink('/dashboard', 'Dashboard')}
+
+              {isAuthenticated ? (
+                <div className="flex items-center gap-2 ml-2">
+                  <span className="text-sm px-2" style={{ color: 'var(--color-text-muted)' }}>
+                    {user?.name || user?.email}
+                  </span>
+                  <button
+                    onClick={handleLogout}
+                    className="btn-ghost text-xs px-3 py-1.5"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 ml-2">
+                  <Link
+                    to="/login"
+                    className="px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 text-[#7a8899] hover:text-white hover:bg-white/06"
+                  >
+                    Sign in
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="btn-gradient text-sm px-4 py-2 rounded-lg"
+                  >
+                    Get started
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -109,7 +140,7 @@ export default function Layout({ children }) {
                 Contact
               </h4>
               <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                Have feedback? We'd love to hear from you!
+                Have feedback? We&apos;d love to hear from you!
               </p>
             </div>
           </div>

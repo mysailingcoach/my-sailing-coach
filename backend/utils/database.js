@@ -59,8 +59,20 @@ export function initDatabase() {
             createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
           )
         `, (err) => {
-          if (err) reject(err);
-          else resolve();
+          if (err) { reject(err); return; }
+
+          db.run(`
+            CREATE TABLE IF NOT EXISTS users (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              name TEXT NOT NULL,
+              email TEXT NOT NULL UNIQUE,
+              passwordHash TEXT NOT NULL,
+              createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+          `, (err) => {
+            if (err) reject(err);
+            else resolve();
+          });
         });
       });
     });
@@ -151,5 +163,53 @@ export function getRaceAnalyses() {
         );
       }
     );
+  });
+}
+
+export function initUsersTable() {
+  return new Promise((resolve, reject) => {
+    db.run(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        passwordHash TEXT NOT NULL,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `, (err) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+}
+
+export function createUser({ name, email, passwordHash }) {
+  return new Promise((resolve, reject) => {
+    db.run(
+      `INSERT INTO users (name, email, passwordHash) VALUES (?, ?, ?)`,
+      [name, email, passwordHash],
+      function(err) {
+        if (err) reject(err);
+        else resolve(this.lastID);
+      }
+    );
+  });
+}
+
+export function getUserByEmail(email) {
+  return new Promise((resolve, reject) => {
+    db.get(`SELECT * FROM users WHERE email = ?`, [email], (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+}
+
+export function getUserById(id) {
+  return new Promise((resolve, reject) => {
+    db.get(`SELECT id, name, email, createdAt FROM users WHERE id = ?`, [id], (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
   });
 }

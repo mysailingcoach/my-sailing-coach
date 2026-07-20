@@ -11,8 +11,8 @@ const features = [
   },
   {
     icon: '⚡',
-    title: 'Speed Analysis',
-    desc: 'Average, peak and segment speeds broken down lap by lap.',
+    title: 'Advanced Metrics',
+    desc: 'VMG, TWA, heading and performance index.',
   },
   {
     icon: '📏',
@@ -20,9 +20,9 @@ const features = [
     desc: 'Total distance covered and route efficiency scores.',
   },
   {
-    icon: '⏱',
-    title: 'Race Duration',
-    desc: 'Precise timing and session statistics at a glance.',
+    icon: '🔄',
+    title: 'Maneuver Detection',
+    desc: 'Auto-detected tacks/gybes with efficiency scoring.',
   },
 ];
 
@@ -167,11 +167,20 @@ export default function Home() {
             Designed for sailors who want to improve with data.
           </p>
 
-          <div className="flex flex-wrap gap-6 mt-10 text-sm">
-            <div>✓ Interactive Maps</div>
-            <div>✓ Speed Analysis</div>
-            <div>✓ Leg + Maneuver Analytics</div>
-            <div>✓ Unlimited Uploads</div>
+          <div className="animate-slide-up-3 flex flex-wrap gap-3">
+            {['✓ Interactive Maps', '✓ Speed Analysis', '✓ Leg + Maneuver Analytics', '✓ Unlimited Uploads'].map((pill) => (
+              <span
+                key={pill}
+                className="text-sm px-4 py-1.5 rounded-full font-medium"
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  color: '#cbd5e1',
+                }}
+              >
+                {pill}
+              </span>
+            ))}
           </div>
         </div>
       </section>
