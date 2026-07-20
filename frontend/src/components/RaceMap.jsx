@@ -31,7 +31,7 @@ const createWindIcon = (direction, speed) =>
         width:34px;
       ">
         <div style="
-          transform: rotate(${direction}deg);
+          transform: rotate(${direction +180}deg);
           font-size:22px;
           font-weight:bold;
           color:#2563eb;
