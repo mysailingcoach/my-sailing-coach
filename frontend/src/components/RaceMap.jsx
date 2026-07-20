@@ -63,17 +63,44 @@ const tackIcon = L.divIcon({
   className: 'tack-icon',
   html: `
     <div style="
-      font-size:20px;
-      text-align:center;
+      background:white;
+      border-radius:50%;
+      width:26px;
+      height:26px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border:2px solid #2563eb;
+      font-size:14px;
+      font-weight:bold;
     ">
-      🔄
+      ⤴
     </div>
   `,
-  iconSize: [20, 20],
-  iconAnchor: [10, 10]
+  iconSize: [26, 26],
+  iconAnchor: [13, 13]
 });
 
 function angleDifference(a, b) {
+  function normalizeAngle(angle) {
+  return ((angle % 360) + 360) % 360;
+}
+
+function relativeWindAngle(
+  heading,
+  windDirection
+) {
+  let angle =
+    normalizeAngle(
+      heading - windDirection
+    );
+
+  if (angle > 180) {
+    angle -= 360;
+  }
+
+  return angle;
+}
   let diff = Math.abs(a - b);
 
   if (diff > 180) {
@@ -150,7 +177,63 @@ export default function RaceMap({
       !isNaN(mark.lat) &&
       !isNaN(mark.lon)
   );
+const maneuvers = [];
 
+for (
+  let i = 20;
+  i < validTrackpoints.length - 20;
+  i++
+) {
+  const pt = validTrackpoints[i];
+
+  if (
+    !pt.wind ||
+    pt.heading == null ||
+    validTrackpoints[i - 20]?.heading == null ||
+    validTrackpoints[i + 20]?.heading == null
+  ) {
+    continue;
+  }
+
+  const before =
+    relativeWindAngle(
+      validTrackpoints[i - 20].heading,
+      pt.wind.direction
+    );
+
+  const after =
+    relativeWindAngle(
+      validTrackpoints[i + 20].heading,
+      pt.wind.direction
+    );
+
+  // Tack
+  if (
+    (before < -30 && after > 30) ||
+    (before > 30 && after < -30)
+  ) {
+    maneuvers.push({
+      type: 'Tack',
+      point: pt
+    });
+
+    i += 50;
+    continue;
+  }
+
+  // Gybe
+  if (
+    (before < -150 && after > 150) ||
+    (before > 150 && after < -150)
+  ) {
+    maneuvers.push({
+      type: 'Gybe',
+      point: pt
+    });
+
+    i += 50;
+  }
+}
   return (
     <div>
       <MapContainer
@@ -274,43 +357,40 @@ export default function RaceMap({
         )}
 
         {/* Tack / Gybe Detection */}
-        {validTrackpoints
-          .filter(
-            (pt, index) =>
-              index > 0 &&
-              pt.heading != null &&
-              validTrackpoints[index - 1]
-                ?.heading != null &&
-              Math.abs(
-                pt.heading -
-                  validTrackpoints[
-                    index - 1
-                  ].heading
-              ) > 70
-          )
-          .map((pt, index) => (
-            <Marker
-              key={`tack-${index}`}
-              position={[
-                Number(pt.lat),
-                Number(pt.lon)
-              ]}
-              icon={tackIcon}
-            >
-              <Popup>
-                <div>
-                  <strong>
-                    🔄 Tack / Gybe
-                  </strong>
+{maneuvers.map((m, index) => (
+  <Marker
+    key={`maneuver-${index}`}
+    position={[
+      Number(m.point.lat),
+      Number(m.point.lon)
+    ]}
+    icon={tackIcon}
+  >
+    <Popup>
+      <div>
+        <strong>
+          {m.type}
+        </strong>
 
-                  <br />
-                  Large heading
-                  change detected
-                </div>
-              </Popup>
-            </Marker>
-          ))}
+        <br />
 
+        Heading:
+        {' '}
+        {Math.round(
+          m.point.heading || 0
+        )}
+        °
+
+        <br />
+
+        Wind:
+        {' '}
+        {m.point.wind?.direction}
+        °
+      </div>
+    </Popup>
+  </Marker>
+))}
         {/* Wind Arrows */}
         {validTrackpoints
           .filter(
