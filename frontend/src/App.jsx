@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import './index.css';
+import './styles/animations.css';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
