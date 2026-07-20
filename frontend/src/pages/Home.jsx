@@ -319,32 +319,31 @@ export default function Home() {
           >
             <h3 className="font-bold text-base mb-5">What You'll Get</h3>
 
-              <div>
-                <div className="font-semibold">
-                  ⚡ Advanced Metrics
-                </div>
-                <div className="text-sm text-slate-500">
-                  VMG, TWA, heading and performance index.
-                </div>
+            <div>
+              <div className="font-semibold">
+                ⚡ Advanced Metrics
               </div>
-
-              <div>
-                <div className="font-semibold">
-                  📏 Distance Metrics
-                </div>
-                <div className="text-sm text-slate-500">
-                  Total distance and route efficiency.
-                </div>
+              <div className="text-sm text-slate-500">
+                VMG, TWA, heading and performance index.
               </div>
+            </div>
 
-              <div>
-                <div className="font-semibold">
-                  🔄 Maneuver Detection
-                </div>
-                <div className="text-sm text-slate-500">
-                  Auto-detected tacks/gybes with efficiency scoring.
-                </div>
-              ))}
+            <div>
+              <div className="font-semibold">
+                📏 Distance Metrics
+              </div>
+              <div className="text-sm text-slate-500">
+                Total distance and route efficiency.
+              </div>
+            </div>
+
+            <div>
+              <div className="font-semibold">
+                🔄 Maneuver Detection
+              </div>
+              <div className="text-sm text-slate-500">
+                Auto-detected tacks/gybes with efficiency scoring.
+              </div>
             </div>
           </div>
 
