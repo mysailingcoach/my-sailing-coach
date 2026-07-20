@@ -30,6 +30,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 const PORT = process.env.PORT || 5000;
+const uploadAttempts = new Map();
 
 
 // --------------------
@@ -88,12 +89,15 @@ const storage =
 
 
     filename(req, file, cb) {
+      const safeName = path
+        .basename(file.originalname)
+        .replace(/[^a-zA-Z0-9._-]/g, '_');
 
       cb(
         null,
         Date.now() +
         '-' +
-        file.originalname
+        safeName
       );
 
     }
@@ -133,6 +137,30 @@ const upload =
 
   });
 
+function uploadRateLimiter(req, res, next) {
+  const key = req.ip || 'unknown';
+  const now = Date.now();
+  const windowMs = 15 * 60 * 1000;
+  const limit = 15;
+  const attempts =
+    uploadAttempts.get(key) || [];
+
+  const recent = attempts.filter(
+    timestamp => now - timestamp < windowMs
+  );
+
+  if (recent.length >= limit) {
+    return res.status(429).json({
+      error:
+        'Too many uploads. Please wait and try again.'
+    });
+  }
+
+  recent.push(now);
+  uploadAttempts.set(key, recent);
+  next();
+}
+
 
 
 // --------------------
@@ -160,6 +188,7 @@ app.use(
 
 app.post(
   '/api/upload',
+  uploadRateLimiter,
   upload.single('gpx'),
   async (req, res) => {
 
@@ -186,8 +215,10 @@ app.post(
 
 
 
-      const filePath =
-        req.file.path;
+      const filePath = path.join(
+        uploadDir,
+        req.file.filename
+      );
 
       const resolvedPath = path.resolve(filePath);
       const resolvedUploadDir = path.resolve(uploadDir);
