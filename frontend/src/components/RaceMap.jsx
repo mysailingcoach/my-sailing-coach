@@ -81,8 +81,7 @@ const tackIcon = L.divIcon({
   iconAnchor: [13, 13]
 });
 
-function angleDifference(a, b) {
-  function normalizeAngle(angle) {
+function normalizeAngle(angle) {
   return ((angle % 360) + 360) % 360;
 }
 
@@ -101,6 +100,8 @@ function relativeWindAngle(
 
   return angle;
 }
+
+function angleDifference(a, b) {
   let diff = Math.abs(a - b);
 
   if (diff > 180) {
@@ -109,7 +110,6 @@ function relativeWindAngle(
 
   return diff;
 }
-
 function getPerformanceColor(trackpoint) {
   if (
     !trackpoint.wind ||
@@ -222,10 +222,10 @@ for (
   }
 
   // Gybe
-  if (
-    (before < -150 && after > 150) ||
-    (before > 150 && after < -150)
-  ) {
+ if (
+  (before < -120 && after > 120) ||
+  (before > 120 && after < -120)
+) {
     maneuvers.push({
       type: 'Gybe',
       point: pt
