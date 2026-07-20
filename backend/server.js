@@ -6,6 +6,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import rateLimit from 'express-rate-limit';
 
 import {
   parseGPXContent,
@@ -30,7 +31,6 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 const PORT = process.env.PORT || 5000;
-const uploadAttempts = new Map();
 
 
 // --------------------
@@ -80,29 +80,7 @@ if (!fs.existsSync(uploadDir)) {
 // Multer
 // --------------------
 
-const storage =
-  multer.diskStorage({
-
-    destination(req, file, cb) {
-      cb(null, uploadDir);
-    },
-
-
-    filename(req, file, cb) {
-      const safeName = path
-        .basename(file.originalname)
-        .replace(/[^a-zA-Z0-9._-]/g, '_');
-
-      cb(
-        null,
-        Date.now() +
-        '-' +
-        safeName
-      );
-
-    }
-
-  });
+const storage = multer.memoryStorage();
 
 
 
@@ -137,29 +115,16 @@ const upload =
 
   });
 
-function uploadRateLimiter(req, res, next) {
-  const key = req.ip || 'unknown';
-  const now = Date.now();
-  const windowMs = 15 * 60 * 1000;
-  const limit = 15;
-  const attempts =
-    uploadAttempts.get(key) || [];
-
-  const recent = attempts.filter(
-    timestamp => now - timestamp < windowMs
-  );
-
-  if (recent.length >= limit) {
-    return res.status(429).json({
-      error:
-        'Too many uploads. Please wait and try again.'
-    });
+const uploadRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 15,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    error:
+      'Too many uploads. Please wait and try again.'
   }
-
-  recent.push(now);
-  uploadAttempts.set(key, recent);
-  next();
-}
+});
 
 
 
@@ -215,27 +180,7 @@ app.post(
 
 
 
-      const filePath = path.join(
-        uploadDir,
-        req.file.filename
-      );
-
-      const resolvedPath = path.resolve(filePath);
-      const resolvedUploadDir = path.resolve(uploadDir);
-
-      if (
-        !resolvedPath.startsWith(
-          `${resolvedUploadDir}${path.sep}`
-        ) &&
-        resolvedPath !== resolvedUploadDir
-      ) {
-        return res.status(400).json({
-          error: 'Invalid upload path'
-        });
-      }
-
-      const rawGpx = await fs.promises.readFile(
-        resolvedPath,
+      const rawGpx = req.file.buffer?.toString(
         'utf8'
       );
 
@@ -322,7 +267,7 @@ app.post(
               .replace('.gpx',''),
 
 
-          filePath,
+          filePath: null,
 
 
           data: raceData,
