@@ -85,7 +85,12 @@ export default function RaceDetail() {
 
     if (videoRef.current) {
       videoRef.current.currentTime = secondsFromStart;
-      videoRef.current.play().catch(() => {});
+      videoRef.current.play().catch(playError => {
+        console.warn(
+          'Video autoplay failed:',
+          playError?.message || playError
+        );
+      });
     }
   };
 
@@ -102,6 +107,23 @@ export default function RaceDetail() {
       width: Math.max(8, ((item.avgSpeed || 0) / max) * 100)
     }));
   }, [race]);
+
+  const safeVideoUrl = useMemo(() => {
+    if (!videoUrl) {
+      return '';
+    }
+
+    try {
+      const parsed = new URL(videoUrl);
+      const isHttp =
+        parsed.protocol === 'http:' ||
+        parsed.protocol === 'https:';
+
+      return isHttp ? parsed.toString() : '';
+    } catch (urlError) {
+      return '';
+    }
+  }, [videoUrl]);
 
   if (loading) {
     return (
@@ -292,12 +314,12 @@ export default function RaceDetail() {
             </button>
           </div>
 
-          {videoUrl ? (
+          {safeVideoUrl ? (
             <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
               <video
                 ref={videoRef}
                 controls
-                src={videoUrl}
+                src={safeVideoUrl}
                 className="w-full rounded-lg"
               />
               <div>
@@ -317,7 +339,7 @@ export default function RaceDetail() {
             </div>
           ) : (
             <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg text-yellow-800">
-              Add a video URL to enable synchronized playback.
+              Add a valid http/https video URL to enable synchronized playback.
             </div>
           )}
         </div>

@@ -1,9 +1,24 @@
 import { promises as fs } from 'fs';
+import path from 'path';
 import { XMLParser } from 'fast-xml-parser';
 
 export async function parseGPXFile(filePath) {
   try {
-    const data = await fs.readFile(filePath, 'utf8');
+    if (
+      typeof filePath !== 'string' ||
+      filePath.includes('\0') ||
+      !path.isAbsolute(filePath) ||
+      filePath.includes('..') ||
+      !filePath.toLowerCase().endsWith('.gpx')
+    ) {
+      throw new Error('Invalid GPX file path');
+    }
+
+    const normalizedPath = path.normalize(
+      filePath
+    );
+
+    const data = await fs.readFile(normalizedPath, 'utf8');
 
     const parser = new XMLParser({
       ignoreAttributes: false,
@@ -173,7 +188,10 @@ function extractTrackpoints(gpxData) {
                 windSpeed != null || windDirection != null
                   ? {
                       speed: windSpeed,
-                      direction: normalizeAngle(windDirection ?? 0),
+                      direction:
+                        windDirection != null
+                          ? normalizeAngle(windDirection)
+                          : null,
                       source: 'gpx-extension'
                     }
                   : undefined
@@ -721,11 +739,22 @@ function buildAutomatedReport({
       ? 'Maintain your current heading consistency and focus on maneuver exits.'
       : 'Improve heading consistency by reducing abrupt steering changes.';
 
+  const maneuverEfficiencyText =
+    maneuvers.length > 0
+      ? `${(
+          average(
+            maneuvers.map(
+              maneuver => maneuver.efficiencyScore
+            )
+          ) * 100
+        ).toFixed(0)}%`
+      : 'N/A';
+
   return {
     summary:
       `Race distance ${analysis.totalDistance} km in ${analysis.totalTime} h. ` +
       `${maneuvers.length} maneuvers detected with average efficiency ` +
-      `${(average(maneuvers.map(m => m.efficiencyScore)) * 100).toFixed(0)}%.`,
+      `${maneuverEfficiencyText}.`,
     weatherSummary:
       advancedMetrics?.twa?.sampleCount > 0
         ? `Average TWA ${advancedMetrics.twa.avg}° with VMG avg ${advancedMetrics.vmg.avg} km/h.`

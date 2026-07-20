@@ -9,6 +9,22 @@ import {
 
 const router = express.Router();
 
+function isValidVideoUrl(url) {
+  if (!url) {
+    return true;
+  }
+
+  try {
+    const parsed = new URL(url);
+    return (
+      parsed.protocol === 'http:' ||
+      parsed.protocol === 'https:'
+    );
+  } catch (error) {
+    return false;
+  }
+}
+
 function buildComparativeAnalytics(race, allRaces) {
   const analysis = race?.data?.analysis || {};
 
@@ -145,10 +161,18 @@ router.patch('/:id/video', async (req, res) => {
     } = req.body || {};
 
     const safeOffset = Number(offsetSeconds) || 0;
+    const safeUrl =
+      typeof url === 'string' ? url.trim() : '';
+
+    if (!isValidVideoUrl(safeUrl)) {
+      return res.status(400).json({
+        error: 'Invalid video URL'
+      });
+    }
 
     race.data = race.data || {};
     race.data.video = {
-      url: typeof url === 'string' ? url.trim() : '',
+      url: safeUrl,
       offsetSeconds: safeOffset,
       annotations: Array.isArray(annotations)
         ? annotations.slice(0, 100)

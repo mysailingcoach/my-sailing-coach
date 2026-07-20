@@ -15,6 +15,7 @@ function parseRaceData(rawData) {
   try {
     return JSON.parse(rawData);
   } catch (error) {
+    console.warn('Failed to parse race data JSON');
     return {};
   }
 }
