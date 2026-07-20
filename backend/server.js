@@ -18,6 +18,7 @@ import { analyzeRaceAI } from './utils/aiWorker.js';
 import { enrichTrackpointsWithWeather } from './utils/weather.js';
 
 import raceRoutes from './routes/races.js';
+import authRoutes from './routes/auth.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -147,6 +148,11 @@ await initDatabase();
 app.use(
   '/api/races',
   raceRoutes
+);
+
+app.use(
+  '/api/auth',
+  authRoutes
 );
 
 
