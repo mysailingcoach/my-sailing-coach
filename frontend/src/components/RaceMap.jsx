@@ -2,7 +2,7 @@ import React from 'react';
 import {
   MapContainer,
   TileLayer,
-  Polyline,
+ Polyline,
   Marker,
   Popup
 } from 'react-leaflet';
@@ -21,26 +21,48 @@ L.Icon.Default.mergeOptions({
     'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png'
 });
 
-// Wind arrow icon
-const createWindIcon = direction =>
+// Wind arrow icon with speed label
+const createWindIcon = (direction, speed) =>
   L.divIcon({
     className: 'wind-arrow-icon',
     html: `
-      <div
-        style="
+      <div style="
+        text-align:center;
+        width:32px;
+      ">
+        <div style="
           transform: rotate(${direction}deg);
-          font-size: 22px;
-          font-weight: bold;
-          color: #2563eb;
-          text-shadow: 0 0 4px white;
-        "
-      >
-        ↑
+          font-size:22px;
+          font-weight:bold;
+          color:#2563eb;
+          text-shadow:0 0 4px white;
+          line-height:1;
+        ">
+          ↑
+        </div>
+        <div style="
+          font-size:10px;
+          font-weight:bold;
+          color:black;
+          margin-top:-2px;
+          background:white;
+          border-radius:4px;
+          padding:1px 2px;
+        ">
+          ${speed}
+        </div>
       </div>
     `,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12]
+    iconSize: [32, 32],
+    iconAnchor: [16, 16]
   });
+
+function getWindColor(speed) {
+  if (speed >= 20) return '#dc2626'; // red
+  if (speed >= 15) return '#eab308'; // yellow
+  if (speed >= 8) return '#16a34a'; // green
+  return '#2563eb'; // blue
+}
 
 export default function RaceMap({
   trackpoints = [],
@@ -63,11 +85,6 @@ export default function RaceMap({
     );
   }
 
-  const positions = validTrackpoints.map(pt => [
-    Number(pt.lat),
-    Number(pt.lon)
-  ]);
-
   const startPoint = validTrackpoints[0];
 
   const endPoint =
@@ -89,21 +106,6 @@ export default function RaceMap({
       !isNaN(mark.lon)
   );
 
-  const weatherPoints =
-    validTrackpoints.filter(
-      pt => pt.wind
-    );
-
-  console.log(
-    'Trackpoints:',
-    validTrackpoints.length
-  );
-
-  console.log(
-    'Trackpoints with wind:',
-    weatherPoints.length
-  );
-
   return (
     <div>
       <MapContainer
@@ -120,15 +122,39 @@ export default function RaceMap({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {/* Race Track */}
-        <Polyline
-          positions={positions}
-          color="blue"
-          weight={4}
-          opacity={0.8}
-        />
+        {/* Wind-Coloured Track */}
+        {validTrackpoints
+          .slice(1)
+          .map((pt, index) => {
+            const prev =
+              validTrackpoints[index];
 
-        {/* Start Marker */}
+            const windSpeed =
+              pt.wind?.speed || 0;
+
+            return (
+              <Polyline
+                key={`segment-${index}`}
+                positions={[
+                  [
+                    Number(prev.lat),
+                    Number(prev.lon)
+                  ],
+                  [
+                    Number(pt.lat),
+                    Number(pt.lon)
+                  ]
+                ]}
+                color={getWindColor(
+                  windSpeed
+                )}
+                weight={5}
+                opacity={0.9}
+              />
+            );
+          })}
+
+        {/* Start */}
         <Marker
           position={[
             Number(startPoint.lat),
@@ -137,7 +163,9 @@ export default function RaceMap({
         >
           <Popup>
             <div>
-              <strong>🚩 Start</strong>
+              <strong>
+                🚩 Start
+              </strong>
 
               <br />
               <br />
@@ -148,35 +176,13 @@ export default function RaceMap({
               {startPoint.time
                 ? new Date(
                     startPoint.time
-                  ).toLocaleTimeString()
+                  ).toLocaleString()
                 : 'Unknown'}
-
-              {startPoint.wind && (
-                <>
-                  <hr />
-
-                  <strong>
-                    Wind
-                  </strong>
-
-                  <br />
-
-                  Speed:
-                  {' '}
-                  {startPoint.wind.speed} kts
-
-                  <br />
-
-                  Direction:
-                  {' '}
-                  {startPoint.wind.direction}°
-                </>
-              )}
             </div>
           </Popup>
         </Marker>
 
-        {/* Finish Marker */}
+        {/* Finish */}
         <Marker
           position={[
             Number(endPoint.lat),
@@ -185,7 +191,9 @@ export default function RaceMap({
         >
           <Popup>
             <div>
-              <strong>🏁 Finish</strong>
+              <strong>
+                🏁 Finish
+              </strong>
 
               <br />
               <br />
@@ -196,35 +204,13 @@ export default function RaceMap({
               {endPoint.time
                 ? new Date(
                     endPoint.time
-                  ).toLocaleTimeString()
+                  ).toLocaleString()
                 : 'Unknown'}
-
-              {endPoint.wind && (
-                <>
-                  <hr />
-
-                  <strong>
-                    Wind
-                  </strong>
-
-                  <br />
-
-                  Speed:
-                  {' '}
-                  {endPoint.wind.speed} kts
-
-                  <br />
-
-                  Direction:
-                  {' '}
-                  {endPoint.wind.direction}°
-                </>
-              )}
             </div>
           </Popup>
         </Marker>
 
-        {/* Course Marks */}
+        {/* Marks */}
         {validMarks.map(
           (mark, index) => (
             <Marker
@@ -259,7 +245,11 @@ export default function RaceMap({
             (_, index) =>
               index % 50 === 0
           )
-          .filter(pt => pt.wind)
+          .filter(
+            pt =>
+              pt.wind &&
+              pt.wind.speed
+          )
           .map((pt, index) => (
             <Marker
               key={`wind-${index}`}
@@ -268,7 +258,8 @@ export default function RaceMap({
                 Number(pt.lon)
               ]}
               icon={createWindIcon(
-                pt.wind.direction
+                pt.wind.direction,
+                pt.wind.speed
               )}
             >
               <Popup>
@@ -282,13 +273,16 @@ export default function RaceMap({
 
                   Speed:
                   {' '}
-                  {pt.wind.speed} kts
+                  {pt.wind.speed}
+                  {' '}
+                  knots
 
                   <br />
 
                   Direction:
                   {' '}
-                  {pt.wind.direction}°
+                  {pt.wind.direction}
+                  °
 
                   <br />
 
@@ -302,12 +296,36 @@ export default function RaceMap({
           ))}
       </MapContainer>
 
-      {/* Wind Legend */}
-      <div className="mt-2 px-2 text-sm text-gray-600 flex items-center gap-2">
-        <span className="text-blue-600 text-xl">
-          ↑
-        </span>
-        Wind direction
+      {/* Legend */}
+      <div className="mt-3 flex flex-wrap gap-4 text-sm text-gray-700">
+
+        <div className="flex items-center gap-1">
+          <span className="text-blue-600 text-xl">
+            ↑
+          </span>
+          Wind direction
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-blue-500 rounded" />
+          &lt; 8 knots
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-green-600 rounded" />
+          8–15 knots
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-yellow-500 rounded" />
+          15–20 knots
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-red-600 rounded" />
+          20+ knots
+        </div>
+
       </div>
     </div>
   );
