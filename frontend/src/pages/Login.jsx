@@ -61,7 +61,7 @@ export default function Login() {
       title="Welcome back"
       subtitle="Sign in to your account to continue"
     >
-      {/* TODO: Remove this banner once login is re-enabled (set LOGIN_DISABLED = false above). */}
+      {/* TODO: Remove this banner once login is re-enabled (set LOGIN_DISABLED = false in src/config/featureFlags.js). */}
       {LOGIN_DISABLED && (
         <div className="flex items-start gap-2 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 text-sm mb-2">
           <svg className="h-4 w-4 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -77,7 +77,7 @@ export default function Layout({ children }) {
                 </div>
               ) : (
                 <div className="flex items-center gap-2 ml-2">
-                  {/* TODO: Remove LOGIN_DISABLED check to restore the Sign in link. */}
+                  {/* TODO: Remove LOGIN_DISABLED check to restore the Sign in link (set LOGIN_DISABLED = false in src/config/featureFlags.js). */}
                   {!LOGIN_DISABLED && (
                     <Link
                       to="/login"
