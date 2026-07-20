@@ -3,9 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AuthLayout from '../components/AuthLayout';
 import AuthInput from '../components/AuthInput';
-
-// TODO: Set LOGIN_DISABLED to false to re-enable the login feature.
-const LOGIN_DISABLED = true;
+import { LOGIN_DISABLED } from '../config/featureFlags';
 
 function validateEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);

@@ -1,9 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-
-// TODO: Set LOGIN_DISABLED to false to re-enable the login feature.
-const LOGIN_DISABLED = true;
+import { LOGIN_DISABLED } from '../config/featureFlags';
 
 export default function Layout({ children }) {
   const { pathname } = useLocation();
