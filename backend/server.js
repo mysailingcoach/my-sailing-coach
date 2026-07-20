@@ -31,6 +31,8 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 const PORT = process.env.PORT || 5000;
+const UPLOAD_RATE_LIMIT =
+  Number(process.env.UPLOAD_RATE_LIMIT) || 15;
 
 
 // --------------------
@@ -117,7 +119,7 @@ const upload =
 
 const uploadRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 15,
+  limit: UPLOAD_RATE_LIMIT,
   standardHeaders: true,
   legacyHeaders: false,
   message: {

@@ -321,6 +321,7 @@ export default function RaceDetail() {
                 controls
                 src={safeVideoUrl}
                 className="w-full rounded-lg"
+                aria-label="Sailing race video playback"
               />
               <div>
                 <h3 className="font-bold text-gray-800 mb-2">Maneuver Jump List</h3>
@@ -365,8 +366,12 @@ export default function RaceDetail() {
                     <div
                       className="h-3 bg-blue-600 rounded"
                       style={{ width: `${item.width}%` }}
-                    />
-                  </div>
+                        role="progressbar"
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={Math.round(item.width)}
+                      />
+                    </div>
                 </div>
               ))}
             </div>

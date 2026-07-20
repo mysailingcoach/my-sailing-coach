@@ -1,5 +1,14 @@
 import { XMLParser } from 'fast-xml-parser';
 
+const MIN_TRACKPOINTS_FOR_LEG_DETECTION = 5;
+const MIN_LEG_POINTS = 6;
+const MANEUVER_WINDOW = 5;
+const MANEUVER_COOLDOWN_POINTS = 12;
+const MIN_MANEUVER_TURN_ANGLE = 70;
+const GYBE_TURN_THRESHOLD = 140;
+const START_LINE_LOOKAHEAD_POINTS = 5;
+const HEADING_CONSISTENCY_TARGET = 80;
+
 export function parseGPXContent(data) {
   try {
     if (
@@ -342,7 +351,10 @@ function analyzeRace(trackpoints) {
 }
 
 function detectLegs(trackpoints) {
-  if (!Array.isArray(trackpoints) || trackpoints.length < 5) {
+  if (
+    !Array.isArray(trackpoints) ||
+    trackpoints.length < MIN_TRACKPOINTS_FOR_LEG_DETECTION
+  ) {
     return [];
   }
 
@@ -376,7 +388,7 @@ function detectLegs(trackpoints) {
 
   for (let i = 1; i < classified.length; i++) {
     if (classified[i].type !== current.type) {
-      if (i - current.start >= 6) {
+      if (i - current.start >= MIN_LEG_POINTS) {
         legs.push(
           buildLegStats(
             trackpoints,
@@ -394,7 +406,10 @@ function detectLegs(trackpoints) {
     }
   }
 
-  if (classified.length - current.start >= 6) {
+  if (
+    classified.length - current.start >=
+    MIN_LEG_POINTS
+  ) {
     legs.push(
       buildLegStats(
         trackpoints,
@@ -473,21 +488,28 @@ function buildLegStats(trackpoints, start, end, type) {
 }
 
 function detectManeuvers(trackpoints) {
-  if (!Array.isArray(trackpoints) || trackpoints.length < 12) {
+  if (
+    !Array.isArray(trackpoints) ||
+    trackpoints.length < MANEUVER_COOLDOWN_POINTS
+  ) {
     return [];
   }
 
   const maneuvers = [];
   let lastIndex = -20;
 
-  for (let i = 5; i < trackpoints.length - 5; i++) {
-    if (i - lastIndex < 12) {
+  for (
+    let i = MANEUVER_WINDOW;
+    i < trackpoints.length - MANEUVER_WINDOW;
+    i++
+  ) {
+    if (i - lastIndex < MANEUVER_COOLDOWN_POINTS) {
       continue;
     }
 
-    const before = trackpoints[i - 5];
+    const before = trackpoints[i - MANEUVER_WINDOW];
     const current = trackpoints[i];
-    const after = trackpoints[i + 5];
+    const after = trackpoints[i + MANEUVER_WINDOW];
 
     if (
       before.heading == null ||
@@ -512,17 +534,27 @@ function detectManeuvers(trackpoints) {
 
     if (
       Math.sign(turnBefore) === Math.sign(turnAfter) ||
-      netTurn < 70
+      netTurn < MIN_MANEUVER_TURN_ANGLE
     ) {
       continue;
     }
 
-    const type = netTurn >= 140 ? 'Gybe' : 'Tack';
+    const type =
+      netTurn >= GYBE_TURN_THRESHOLD
+        ? 'Gybe'
+        : 'Tack';
     const speedBefore = average(
-      trackpoints.slice(i - 5, i).map(p => p.sog || 0)
+      trackpoints
+        .slice(i - MANEUVER_WINDOW, i)
+        .map(p => p.sog || 0)
     );
     const speedAfter = average(
-      trackpoints.slice(i + 1, i + 6).map(p => p.sog || 0)
+      trackpoints
+        .slice(
+          i + 1,
+          i + MANEUVER_WINDOW + 1
+        )
+        .map(p => p.sog || 0)
     );
 
     const efficiencyScore =
@@ -650,7 +682,12 @@ function computeStartLineAnalysis(trackpoints, marks) {
         }
       : {
           a: trackpoints[0],
-          b: trackpoints[Math.min(trackpoints.length - 1, 5)],
+          b: trackpoints[
+            Math.min(
+              trackpoints.length - 1,
+              START_LINE_LOOKAHEAD_POINTS
+            )
+          ],
           source: 'derived'
         };
 
@@ -724,7 +761,8 @@ function buildAutomatedReport({
       : null;
 
   const recommendation =
-    advancedMetrics?.headingAnalysis?.consistencyScore >= 80
+    advancedMetrics?.headingAnalysis?.consistencyScore >=
+    HEADING_CONSISTENCY_TARGET
       ? 'Maintain your current heading consistency and focus on maneuver exits.'
       : 'Improve heading consistency by reducing abrupt steering changes.';
 

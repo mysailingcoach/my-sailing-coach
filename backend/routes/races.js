@@ -8,6 +8,7 @@ import {
 } from '../utils/database.js';
 
 const router = express.Router();
+const MAX_VIDEO_ANNOTATIONS = 100;
 
 function isValidVideoUrl(url) {
   if (!url) {
@@ -175,7 +176,7 @@ router.patch('/:id/video', async (req, res) => {
       url: safeUrl,
       offsetSeconds: safeOffset,
       annotations: Array.isArray(annotations)
-        ? annotations.slice(0, 100)
+        ? annotations.slice(0, MAX_VIDEO_ANNOTATIONS)
         : [],
       updatedAt: new Date().toISOString()
     };
