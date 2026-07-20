@@ -50,6 +50,26 @@ async function run() {
       process.exit(5);
     }
 
+    if (!Array.isArray(result.analysis?.legs)) {
+      console.error('FAIL: missing leg analysis');
+      process.exit(6);
+    }
+
+    if (!Array.isArray(result.analysis?.maneuvers)) {
+      console.error('FAIL: missing maneuver analysis');
+      process.exit(7);
+    }
+
+    if (!result.analysis?.vmg || !result.analysis?.twa) {
+      console.error('FAIL: missing advanced metrics');
+      process.exit(8);
+    }
+
+    if (!result.analysis?.startLine) {
+      console.error('FAIL: missing start line analysis');
+      process.exit(9);
+    }
+
     console.log('PASS: gpxParser basic checks');
     process.exit(0);
   } catch (err) {

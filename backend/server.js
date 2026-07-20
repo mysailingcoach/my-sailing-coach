@@ -7,7 +7,10 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 
-import { parseGPXFile } from './utils/gpxParser.js';
+import {
+  parseGPXFile,
+  computeAdvancedAnalysis
+} from './utils/gpxParser.js';
 import {
   initDatabase,
   saveRace,
@@ -252,6 +255,13 @@ app.post(
 
 
       }
+
+      raceData.analysis =
+        computeAdvancedAnalysis(
+          raceData.trackpoints || [],
+          raceData.marks || [],
+          raceData.analysis
+        );
 
 
 
