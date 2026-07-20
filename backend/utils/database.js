@@ -92,6 +92,7 @@ export function saveRace(raceData) {
       JSON.stringify(raceData.data),
       raceData.uploadDate,
       function(err) {
+        stmt.finalize();
         if (err) reject(err);
         else resolve(this.lastID);
       }
