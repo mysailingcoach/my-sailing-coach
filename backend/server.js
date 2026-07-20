@@ -8,7 +8,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 import {
-  parseGPXFile,
+  parseGPXContent,
   computeAdvancedAnalysis
 } from './utils/gpxParser.js';
 import {
@@ -189,12 +189,26 @@ app.post(
       const filePath =
         req.file.path;
 
+      const resolvedPath = path.resolve(filePath);
+      const resolvedUploadDir = path.resolve(uploadDir);
 
+      if (
+        !resolvedPath.startsWith(
+          `${resolvedUploadDir}${path.sep}`
+        ) &&
+        resolvedPath !== resolvedUploadDir
+      ) {
+        return res.status(400).json({
+          error: 'Invalid upload path'
+        });
+      }
 
-      // Parse GPX
+      const rawGpx = await fs.promises.readFile(
+        resolvedPath,
+        'utf8'
+      );
 
-      const raceData =
-        await parseGPXFile(filePath);
+      const raceData = parseGPXContent(rawGpx);
 
 
 

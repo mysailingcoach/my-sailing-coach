@@ -3,7 +3,7 @@ import os from 'os';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { parseGPXFile } from '../utils/gpxParser.js';
+import { parseGPXContent } from '../utils/gpxParser.js';
 
 async function run() {
   // Create a minimal GPX with one track (3 points) and one waypoint
@@ -25,7 +25,8 @@ async function run() {
   fs.writeFileSync(filePath, gpx, 'utf8');
 
   try {
-    const result = await parseGPXFile(filePath);
+    const rawData = fs.readFileSync(filePath, 'utf8');
+    const result = parseGPXContent(rawData);
     // Basic assertions
     if (!result.trackpoints || result.trackpoints.length !== 3) {
       console.error('FAIL: trackpoints length mismatch', result.trackpoints && result.trackpoints.length);

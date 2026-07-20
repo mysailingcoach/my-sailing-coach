@@ -1,24 +1,13 @@
-import { promises as fs } from 'fs';
-import path from 'path';
 import { XMLParser } from 'fast-xml-parser';
 
-export async function parseGPXFile(filePath) {
+export function parseGPXContent(data) {
   try {
     if (
-      typeof filePath !== 'string' ||
-      filePath.includes('\0') ||
-      !path.isAbsolute(filePath) ||
-      filePath.includes('..') ||
-      !filePath.toLowerCase().endsWith('.gpx')
+      typeof data !== 'string' ||
+      data.trim().length === 0
     ) {
-      throw new Error('Invalid GPX file path');
+      throw new Error('Invalid GPX content');
     }
-
-    const normalizedPath = path.normalize(
-      filePath
-    );
-
-    const data = await fs.readFile(normalizedPath, 'utf8');
 
     const parser = new XMLParser({
       ignoreAttributes: false,
