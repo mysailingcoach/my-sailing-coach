@@ -36,7 +36,6 @@ export default function Layout({ children }) {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--color-bg)' }}>
-
       {/* ── Navigation ── */}
       <nav
         className="sticky top-0 z-50 glass-strong"
@@ -117,6 +116,7 @@ export default function Layout({ children }) {
                 Sailing performance analysis powered by your GPS data.
               </p>
             </div>
+
             <div>
               <h4
                 className="text-sm font-semibold mb-4 uppercase tracking-wider"
@@ -130,7 +130,21 @@ export default function Layout({ children }) {
                 <li>Performance Metrics</li>
               </ul>
             </div>
-            
+
+            <div>
+              <h4
+                className="text-sm font-semibold mb-4 uppercase tracking-wider"
+                style={{ color: 'var(--color-text-muted)' }}
+              >
+                Product
+              </h4>
+              <ul className="space-y-2 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                <li>Upload</li>
+                <li>Dashboard</li>
+                <li>Race Insights</li>
+              </ul>
+            </div>
+          </div>
 
           <hr className="divider mb-8" />
 
