@@ -46,7 +46,7 @@ export default function Layout({ children }) {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2">
-              <span className="text-xl">⛵</span>
+              <span className="text-xl"></span>
               <span className="text-base font-bold gradient-text">
                 MySailingCoach
               </span>
@@ -110,11 +110,11 @@ export default function Layout({ children }) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-xl">⛵</span>
+                <span className="text-xl"></span>
                 <span className="font-bold gradient-text">MySailingCoach</span>
               </div>
               <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                Free sailing performance analysis powered by your GPS data.
+                Sailing performance analysis powered by your GPS data.
               </p>
             </div>
             <div>
@@ -130,18 +130,7 @@ export default function Layout({ children }) {
                 <li>Performance Metrics</li>
               </ul>
             </div>
-            <div>
-              <h4
-                className="text-sm font-semibold mb-4 uppercase tracking-wider"
-                style={{ color: 'var(--color-text-muted)' }}
-              >
-                Contact
-              </h4>
-              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                Have feedback? We&apos;d love to hear from you!
-              </p>
-            </div>
-          </div>
+            
 
           <hr className="divider mb-8" />
 
