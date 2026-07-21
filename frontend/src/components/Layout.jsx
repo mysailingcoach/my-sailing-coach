@@ -45,13 +45,6 @@ export default function Layout({ children }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
 
-            {/* Logo */}
-            <Link to="/" className="flex items-center gap-2.5 group">
-              <span
-                className="text-2xl transition-transform duration-300 group-hover:scale-110"
-                style={{ display: 'inline-block' }}
-              >
-                ⛵
               </span>
               <span className="text-base font-bold gradient-text">
                 MySailingCoach
