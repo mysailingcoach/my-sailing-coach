@@ -73,7 +73,7 @@ export default function PerformanceMetrics({ analysis, comparative }) {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-800">
+      <h2 className="text-2xl font-bold text-black">
         Performance Metrics
       </h2>
 
@@ -99,41 +99,41 @@ export default function PerformanceMetrics({ analysis, comparative }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">
+          <h3 className="text-lg font-bold text-black mb-4">
             Advanced Sailing Metrics
           </h3>
 
           <div className="space-y-3 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-600">VMG (avg / max)</span>
+              <span className="text-black">VMG (avg / max)</span>
               <span className="font-semibold">
                 {formatNumber(analysis.vmg?.avg, 2)} / {formatNumber(analysis.vmg?.max, 2)} km/h
               </span>
             </div>
 
             <div className="flex justify-between">
-              <span className="text-gray-600">TWA (avg)</span>
+              <span className="text-black">TWA (avg)</span>
               <span className="font-semibold">
                 {formatNumber(analysis.twa?.avg, 1)}°
               </span>
             </div>
 
             <div className="flex justify-between">
-              <span className="text-gray-600">SOG vs True Speed</span>
+              <span className="text-black">SOG vs True Speed</span>
               <span className="font-semibold">
                 {formatNumber(analysis.sogVsTrueSpeed?.avgSog, 2)} / {formatNumber(analysis.sogVsTrueSpeed?.estimatedTrueSpeed, 2)} km/h
               </span>
             </div>
 
             <div className="flex justify-between">
-              <span className="text-gray-600">Heading Consistency</span>
+              <span className="text-black">Heading Consistency</span>
               <span className="font-semibold">
                 {formatNumber(analysis.headingAnalysis?.consistencyScore, 1)}%
               </span>
             </div>
 
             <div className="flex justify-between">
-              <span className="text-gray-600">Start Timing Score</span>
+              <span className="text-black">Start Timing Score</span>
               <span className="font-semibold">
                 {formatNumber(analysis.startLine?.startTimingScore, 1)}
               </span>
@@ -142,39 +142,39 @@ export default function PerformanceMetrics({ analysis, comparative }) {
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">
+          <h3 className="text-lg font-bold text-black mb-4">
             Comparative Analytics
           </h3>
 
           {comparative?.hasHistory ? (
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600">Historical races</span>
+                <span className="text-black">Historical races</span>
                 <span className="font-semibold">{comparative.historyCount}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Avg speed delta</span>
+                <span className="text-black">Avg speed delta</span>
                 <span className={`font-semibold ${comparative.delta?.avgSpeed >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {comparative.delta?.avgSpeed >= 0 ? '+' : ''}
                   {formatNumber(comparative.delta?.avgSpeed, 2)} km/h
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Performance index delta</span>
+                <span className="text-black">Performance index delta</span>
                 <span className={`font-semibold ${comparative.delta?.performanceIndex >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {comparative.delta?.performanceIndex >= 0 ? '+' : ''}
                   {formatNumber(comparative.delta?.performanceIndex, 1)}
                 </span>
               </div>
               <div className="pt-2 border-t">
-                <div className="text-gray-600">Personal best segment</div>
+                <div className="text-black">Personal best segment</div>
                 <div className="font-semibold">
                   {comparative.personalBestSegment?.type || 'N/A'} ({formatNumber(comparative.personalBestSegment?.avgSpeed, 2)} km/h)
                 </div>
               </div>
             </div>
           ) : (
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-black">
               Upload more races to unlock historical trend comparisons.
             </p>
           )}
@@ -182,17 +182,17 @@ export default function PerformanceMetrics({ analysis, comparative }) {
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-4">
+        <h3 className="text-lg font-bold text-black mb-4">
           Leg Analysis
         </h3>
 
         {legRows.length === 0 ? (
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-black">
             No leg data available for this race.
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-gray-800">
+            <table className="w-full text-sm text-black">
   <thead className="bg-gray-100 text-gray-900">
     <tr>
       <th className="px-3 py-2 text-left">Leg</th>
@@ -219,12 +219,12 @@ export default function PerformanceMetrics({ analysis, comparative }) {
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-4">
+        <h3 className="text-lg font-bold text-black mb-4">
           Maneuver Analysis
         </h3>
 
         {(analysis.maneuvers || []).length === 0 ? (
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-black">
             No tacks or gybes detected.
           </p>
         ) : (
@@ -235,12 +235,12 @@ export default function PerformanceMetrics({ analysis, comparative }) {
                   <div className="font-semibold">
                     {maneuver.type} at point {maneuver.index}
                   </div>
-                  <div className="text-xs text-gray-600">
+                  <div className="text-xs text-black">
                     Δ heading {formatNumber(maneuver.headingChange, 1)}° • speed {formatNumber(maneuver.speedBefore, 2)} → {formatNumber(maneuver.speedAfter, 2)} km/h
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-600">Efficiency</div>
+                  <div className="text-xs text-black">Efficiency</div>
                   <div className="font-semibold">{formatNumber(maneuver.efficiencyScore * 100, 0)}%</div>
                 </div>
               </div>
@@ -251,16 +251,16 @@ export default function PerformanceMetrics({ analysis, comparative }) {
 
       {analysis?.report && (
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-bold text-gray-800 mb-2">
+          <h3 className="text-lg font-bold text-black mb-2">
             Automated Sailing Report
           </h3>
-          <p className="text-sm text-gray-700 mb-2">
+          <p className="text-sm text-black mb-2">
             {analysis.report.summary}
           </p>
-          <p className="text-sm text-gray-600 mb-3">
+          <p className="text-sm text-black mb-3">
             {analysis.report.weatherSummary}
           </p>
-          <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1">
+          <ul className="list-disc pl-5 text-sm text-black space-y-1">
             {(analysis.report.recommendations || []).map((item, idx) => (
               <li key={idx}>{item}</li>
             ))}
@@ -269,13 +269,13 @@ export default function PerformanceMetrics({ analysis, comparative }) {
       )}
 
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-4">
+        <h3 className="text-lg font-bold text-black mb-4">
           Race Timeline
         </h3>
 
         <div className="space-y-3">
           <div className="flex justify-between items-center">
-            <span className="text-gray-600">Start Time:</span>
+            <span className="text-black">Start Time:</span>
 
             <span className="font-semibold">
               {analysis.startTime
@@ -285,7 +285,7 @@ export default function PerformanceMetrics({ analysis, comparative }) {
           </div>
 
           <div className="flex justify-between items-center">
-            <span className="text-gray-600">End Time:</span>
+            <span className="text-black">End Time:</span>
 
             <span className="font-semibold">
               {analysis.endTime
@@ -295,7 +295,7 @@ export default function PerformanceMetrics({ analysis, comparative }) {
           </div>
 
           <div className="border-t pt-3 flex justify-between items-center">
-            <span className="text-gray-600">Total Duration:</span>
+            <span className="text-black">Total Duration:</span>
 
             <span className="font-semibold text-lg">
               {formatNumber(analysis.totalTime, 2)} hours
