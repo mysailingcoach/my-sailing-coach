@@ -639,6 +639,8 @@ function computeManeuverTargetDirection(
     afterHeading
   ]);
 
+  // Opposing approach/exit headings do not define a stable
+  // shared course axis for made-good calculations.
   return targetDirection == null
     ? null
     : Number(targetDirection.toFixed(1));
