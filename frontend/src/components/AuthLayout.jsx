@@ -12,13 +12,6 @@ export default function AuthLayout({ children, title, subtitle }) {
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
       </div>
-
-      {/* Logo */}
-      <Link to="/" className="flex items-center gap-2 mb-8 z-10">
-        <span className="text-3xl">⛵</span>
-        <span className="text-xl font-bold gradient-text">MySailingCoach</span>
-      </Link>
-
       {/* Card */}
       <div className="relative z-10 w-full max-w-md glass rounded-2xl p-8 shadow-2xl">
         {title && (
