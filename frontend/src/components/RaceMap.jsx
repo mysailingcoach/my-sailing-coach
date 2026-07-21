@@ -26,43 +26,6 @@ L.Icon.Default.mergeOptions({
     'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png'
 });
 
-// Wind arrow icon
-const createWindIcon = (direction, speed) =>
-  L.divIcon({
-    className: 'wind-arrow-icon',
-    html: `
-      <div style="
-        text-align:center;
-        width:34px;
-      ">
-        <div style="
-          transform: rotate(${direction +180}deg);
-          font-size:22px;
-          font-weight:bold;
-          color:#2563eb;
-          text-shadow:0 0 4px white;
-          line-height:1;
-        ">
-          ↑
-        </div>
-
-        <div style="
-          font-size:10px;
-          font-weight:bold;
-          color:black;
-          background:white;
-          border-radius:4px;
-          padding:1px 2px;
-          margin-top:-2px;
-        ">
-          ${Math.round(speed)}
-        </div>
-      </div>
-    `,
-    iconSize: [34, 34],
-    iconAnchor: [17, 17]
-  });
-
 // Tack marker
 const tackIcon = L.divIcon({
   className: 'tack-icon',
@@ -104,16 +67,6 @@ function relativeWindAngle(
   }
 
   return angle;
-}
-
-function angleDifference(a, b) {
-  let diff = Math.abs(a - b);
-
-  if (diff > 180) {
-    diff = 360 - diff;
-  }
-
-  return diff;
 }
 
 export default function RaceMap({
@@ -231,8 +184,17 @@ if (providedManeuvers.length > 0) {
     }
   }
 }
+  const windPoint =
+    [...validTrackpoints]
+      .reverse()
+      .find(
+        pt =>
+          pt.wind &&
+          pt.wind.speed != null
+      );
+
   return (
-    <div>
+    <div style={{ position: 'relative' }}>
       <MapContainer
         center={center}
         zoom={13}
@@ -405,97 +367,54 @@ if (providedManeuvers.length > 0) {
     </Popup>
   </Marker>
 ))}
-        {/* Wind Arrows */}
-        {validTrackpoints
-          .filter(
-            (_, index) =>
-              index % 50 === 0
-          )
-          .filter(
-            pt =>
-              pt.wind &&
-              pt.wind.speed
-          )
-          .map((pt, index) => {
-            const angle =
-              angleDifference(
-                pt.heading || 0,
-                pt.wind.direction
-              );
-
-            return (
-              <Marker
-                key={`wind-${index}`}
-                position={[
-                  Number(pt.lat),
-                  Number(pt.lon)
-                ]}
-                icon={createWindIcon(
-                  pt.wind.direction,
-                  pt.wind.speed
-                )}
-              >
-                <Popup>
-                  <div>
-                    <strong>
-                      🌬 Wind
-                    </strong>
-
-                    <br />
-                    <br />
-
-                    Speed:
-                    {' '}
-                    {pt.wind.speed}
-                    {' '}
-                    knots
-
-                    <br />
-
-                    Direction:
-                    {' '}
-                    {pt.wind.direction}
-                    °
-
-                    <br />
-
-                    Heading:
-                    {' '}
-                    {Math.round(
-                      pt.heading || 0
-                    )}
-                    °
-
-                    <br />
-                    <br />
-
-                    {angle < 45 && (
-                      <div>
-                        ⚠ Sailing
-                        close-hauled
-                      </div>
-                    )}
-
-                    {angle >= 45 &&
-                      angle < 90 && (
-                        <div>
-                          ⚡ Moderate
-                          VMG
-                        </div>
-                      )}
-
-                    {angle >= 90 && (
-                      <div>
-                        ✅ Good VMG
-                        angle
-                      </div>
-                    )}
-                  </div>
-                </Popup>
-              </Marker>
-            );
-          })}
       </MapContainer>
+
+      {/* Wind / Weather Overlay */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '10px',
+          right: '10px',
+          zIndex: 1000,
+          background: 'rgba(255,255,255,0.92)',
+          borderRadius: '8px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+          padding: '10px 14px',
+          fontSize: '13px',
+          color: '#1e293b',
+          minWidth: '150px'
+        }}
+      >
+        <div
+          style={{
+            fontWeight: 'bold',
+            marginBottom: '6px'
+          }}
+        >
+          🌬 Wind &amp; Weather
+        </div>
+
+        <div>
+          Speed:{' '}
+          {windPoint?.wind?.speed != null
+            ? `${windPoint.wind.speed} kn`
+            : '—'}
+        </div>
+
+        <div>
+          Direction:{' '}
+          {windPoint?.wind?.direction != null
+            ? `${windPoint.wind.direction}°`
+            : '—'}
+        </div>
+
+        <div>
+          Heading:{' '}
+          {windPoint?.heading != null
+            ? `${Math.round(windPoint.heading)}°`
+            : '—'}
+        </div>
+      </div>
 
       {/* Legend */}
       <div className="mt-3 flex flex-wrap gap-4 text-sm text-gray-700">
@@ -512,10 +431,6 @@ if (providedManeuvers.length > 0) {
 
         <div className="flex items-center gap-2">
           🔄 Tack / Gybe
-        </div>
-
-        <div className="flex items-center gap-2">
-          ↑ Wind Direction
         </div>
 
       </div>
