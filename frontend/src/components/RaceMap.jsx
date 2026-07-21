@@ -9,6 +9,10 @@ import {
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { formatMetersMadeGood } from '../utils/maneuverFormatters';
+import {
+  getSpeedColorDomain,
+  getSpeedTrackColor
+} from '../utils/trackSpeedColors';
 
 // Fix Leaflet marker icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -111,31 +115,6 @@ function angleDifference(a, b) {
 
   return diff;
 }
-function getPerformanceColor(trackpoint) {
-  if (
-    !trackpoint.wind ||
-    trackpoint.heading == null
-  ) {
-    return '#6b7280';
-  }
-
-  const angle = angleDifference(
-    trackpoint.heading,
-    trackpoint.wind.direction
-  );
-
-  // Very simplistic VMG model
-
-  if (angle < 45) {
-    return '#dc2626'; // poor
-  }
-
-  if (angle < 90) {
-    return '#eab308'; // moderate
-  }
-
-  return '#16a34a'; // good
-}
 
 export default function RaceMap({
   trackpoints = [],
@@ -170,6 +149,8 @@ export default function RaceMap({
     Number(startPoint.lat),
     Number(startPoint.lon)
   ];
+  const speedColorDomain =
+    getSpeedColorDomain(validTrackpoints);
 
   const validMarks = (marks || []).filter(
     mark =>
@@ -286,7 +267,10 @@ if (providedManeuvers.length > 0) {
                     Number(pt.lon)
                   ]
                 ]}
-                color={getPerformanceColor(pt)}
+                color={getSpeedTrackColor(
+                  pt.sog,
+                  speedColorDomain
+                )}
                 weight={5}
                 opacity={0.9}
               />
@@ -517,18 +501,13 @@ if (providedManeuvers.length > 0) {
       <div className="mt-3 flex flex-wrap gap-4 text-sm text-gray-700">
 
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-green-600 rounded" />
-          Good VMG
+          <div className="w-4 h-4 rounded bg-blue-700" />
+          Slower speed
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-yellow-500 rounded" />
-          Moderate VMG
-        </div>
-
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-red-600 rounded" />
-          Poor Angle
+          <div className="w-4 h-4 rounded bg-red-600" />
+          Faster speed
         </div>
 
         <div className="flex items-center gap-2">
