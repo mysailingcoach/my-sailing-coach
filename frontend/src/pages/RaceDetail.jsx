@@ -4,6 +4,10 @@ import axios from 'axios';
 import RaceMap from '../components/RaceMap';
 import PerformanceMetrics from '../components/PerformanceMetrics';
 import { getApiUrl } from '../api/client';
+import {
+  buildManeuverListLabel,
+  formatMetersMadeGood
+} from '../utils/maneuverFormatters';
 
 const TABS = [
   { key: 'overview', label: 'Overview' },
@@ -315,7 +319,12 @@ export default function RaceDetail() {
                       onClick={() => jumpToMoment(maneuver.time)}
                       className="w-full text-left border rounded px-3 py-2 hover:bg-blue-50"
                     >
-                      {maneuver.type} • point {maneuver.index} • {maneuver.time ? new Date(maneuver.time).toLocaleTimeString() : 'N/A'}
+                      {buildManeuverListLabel(maneuver)}
+                      {' • '}
+                      {maneuver.time ? new Date(maneuver.time).toLocaleTimeString() : 'N/A'}
+                      <span className="block text-xs text-black">
+                        Made good: {formatMetersMadeGood(maneuver.metersMadeGood)}
+                      </span>
                     </button>
                   ))}
                 </div>
