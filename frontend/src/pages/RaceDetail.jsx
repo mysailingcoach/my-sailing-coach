@@ -5,8 +5,7 @@ import RaceMap from '../components/RaceMap';
 import PerformanceMetrics from '../components/PerformanceMetrics';
 import { getApiUrl } from '../api/client';
 import {
-  buildManeuverListLabel,
-  formatMetersMadeGood
+  buildManeuverListLabel
 } from '../utils/maneuverFormatters';
 
 const TABS = [
@@ -322,9 +321,6 @@ export default function RaceDetail() {
                       {buildManeuverListLabel(maneuver)}
                       {' • '}
                       {maneuver.time ? new Date(maneuver.time).toLocaleTimeString() : 'N/A'}
-                      <span className="block text-xs text-black">
-                        Made good: {formatMetersMadeGood(maneuver.metersMadeGood)}
-                      </span>
                     </button>
                   ))}
                 </div>
