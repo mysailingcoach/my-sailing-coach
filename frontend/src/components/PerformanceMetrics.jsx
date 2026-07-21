@@ -1,12 +1,11 @@
 import React from 'react';
+import {
+  buildManeuverSummary,
+  formatMetersMadeGood,
+  formatNumber
+} from '../utils/maneuverFormatters';
 
 export default function PerformanceMetrics({ analysis, comparative }) {
-  const formatNumber = (value, decimals = 1) => {
-    return value != null && !isNaN(value)
-      ? Number(value).toFixed(decimals)
-      : 'N/A';
-  };
-
   if (!analysis) {
     return (
       <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
@@ -236,10 +235,14 @@ export default function PerformanceMetrics({ analysis, comparative }) {
                     {maneuver.type} at point {maneuver.index}
                   </div>
                   <div className="text-xs text-black">
-                    Δ heading {formatNumber(maneuver.headingChange, 1)}° • speed {formatNumber(maneuver.speedBefore, 2)} → {formatNumber(maneuver.speedAfter, 2)} km/h
+                    {buildManeuverSummary(maneuver)}
                   </div>
                 </div>
                 <div className="text-right">
+                  <div className="text-xs text-black">Made good</div>
+                  <div className="font-semibold">
+                    {formatMetersMadeGood(maneuver.metersMadeGood)}
+                  </div>
                   <div className="text-xs text-black">Efficiency</div>
                   <div className="font-semibold">{formatNumber(maneuver.efficiencyScore * 100, 0)}%</div>
                 </div>

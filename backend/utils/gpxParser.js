@@ -566,6 +566,17 @@ function detectManeuvers(trackpoints) {
             ).toFixed(2)
           )
         : 0;
+    const targetCourseDirection =
+      computeManeuverTargetDirection(
+        trackpoints,
+        i
+      );
+    const metersMadeGood =
+      computeMetersMadeGoodAfterManeuver(
+        trackpoints,
+        i,
+        targetCourseDirection
+      );
 
     maneuvers.push({
       type,
@@ -577,13 +588,140 @@ function detectManeuvers(trackpoints) {
       speedBefore: Number(speedBefore.toFixed(2)),
       speedAfter: Number(speedAfter.toFixed(2)),
       speedDelta: Number((speedAfter - speedBefore).toFixed(2)),
-      efficiencyScore
+      efficiencyScore,
+      targetCourseDirection,
+      metersMadeGood
     });
 
     lastIndex = i;
   }
 
   return maneuvers;
+}
+
+function computeManeuverTargetDirection(
+  trackpoints,
+  maneuverIndex
+) {
+  if (
+    !Array.isArray(trackpoints) ||
+    !Number.isInteger(maneuverIndex)
+  ) {
+    return null;
+  }
+
+  const beforeHeading = circularMeanDirection(
+    trackpoints
+      .slice(
+        Math.max(0, maneuverIndex - MANEUVER_WINDOW),
+        maneuverIndex
+      )
+      .map(point => point?.heading)
+  );
+  const afterHeading = circularMeanDirection(
+    trackpoints
+      .slice(
+        maneuverIndex + 1,
+        maneuverIndex + MANEUVER_WINDOW + 1
+      )
+      .map(point => point?.heading)
+  );
+
+  if (
+    beforeHeading == null ||
+    afterHeading == null
+  ) {
+    return null;
+  }
+
+  const targetDirection = circularMeanDirection([
+    beforeHeading,
+    afterHeading
+  ]);
+
+  // Opposing approach/exit headings do not define a stable
+  // shared course axis for made-good calculations.
+  return targetDirection == null
+    ? null
+    : Number(targetDirection.toFixed(1));
+}
+
+/**
+ * Projects the immediate post-maneuver displacement onto the
+ * maneuver's intended course axis and returns the forward
+ * meters made good. Regressing away from the target axis is
+ * normalized to zero so the metric reflects effective
+ * progress after the tack or gybe.
+ */
+function computeMetersMadeGoodAfterManeuver(
+  trackpoints,
+  maneuverIndex,
+  targetCourseDirection
+) {
+  if (
+    !Array.isArray(trackpoints) ||
+    !Number.isInteger(maneuverIndex) ||
+    !Number.isFinite(targetCourseDirection)
+  ) {
+    return null;
+  }
+
+  const startPoint = trackpoints[maneuverIndex];
+  const endPoint =
+    trackpoints[
+      Math.min(
+        trackpoints.length - 1,
+        maneuverIndex + MANEUVER_WINDOW
+      )
+    ];
+
+  if (
+    !startPoint ||
+    !endPoint ||
+    !Number.isFinite(startPoint.lat) ||
+    !Number.isFinite(startPoint.lon) ||
+    !Number.isFinite(endPoint.lat) ||
+    !Number.isFinite(endPoint.lon) ||
+    startPoint === endPoint
+  ) {
+    return null;
+  }
+
+  const distanceKm = calculateDistance(
+    startPoint.lat,
+    startPoint.lon,
+    endPoint.lat,
+    endPoint.lon
+  );
+  const bearing = calculateBearing(
+    startPoint.lat,
+    startPoint.lon,
+    endPoint.lat,
+    endPoint.lon
+  );
+
+  if (
+    !Number.isFinite(distanceKm) ||
+    !Number.isFinite(bearing)
+  ) {
+    return null;
+  }
+
+  const projectedMeters =
+    distanceKm *
+    1000 *
+    Math.cos(
+      (signedAngleDelta(
+        targetCourseDirection,
+        bearing
+      ) *
+        Math.PI) /
+        180
+    );
+
+  return Number(
+    Math.max(0, projectedMeters).toFixed(1)
+  );
 }
 
 function computeAdvancedMetrics(trackpoints) {
@@ -832,6 +970,40 @@ function average(values) {
   );
 }
 
+function circularMeanDirection(angles) {
+  const validAngles = (angles || []).filter(angle =>
+    Number.isFinite(angle)
+  );
+
+  if (validAngles.length === 0) {
+    return null;
+  }
+
+  const x = average(
+    validAngles.map(
+      angle =>
+        Math.cos((normalizeAngle(angle) * Math.PI) / 180)
+    )
+  );
+  const y = average(
+    validAngles.map(
+      angle =>
+        Math.sin((normalizeAngle(angle) * Math.PI) / 180)
+    )
+  );
+
+  if (
+    Math.abs(x) < 1e-9 &&
+    Math.abs(y) < 1e-9
+  ) {
+    return null;
+  }
+
+  return normalizeAngle(
+    (Math.atan2(y, x) * 180) / Math.PI
+  );
+}
+
 function standardDeviation(values) {
   if (!values || values.length === 0) {
     return 0;
@@ -942,5 +1114,8 @@ function calculateDistance(
 }
 
 export {
-  calculateDistance
+  calculateDistance,
+  calculateBearing,
+  computeManeuverTargetDirection,
+  computeMetersMadeGoodAfterManeuver
 };

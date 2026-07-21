@@ -8,6 +8,7 @@ import {
 } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { formatMetersMadeGood } from '../utils/maneuverFormatters';
 
 // Fix Leaflet marker icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -189,7 +190,8 @@ if (providedManeuvers.length > 0) {
     if (point) {
       maneuvers.push({
         type: maneuver.type,
-        point
+        point,
+        metersMadeGood: maneuver.metersMadeGood
       });
     }
   });
@@ -394,7 +396,7 @@ if (providedManeuvers.length > 0) {
 
         <br />
 
-        Heading:
+        Heading
         {' '}
         {Math.round(
           m.point.heading || 0
@@ -403,10 +405,18 @@ if (providedManeuvers.length > 0) {
 
         <br />
 
-        Wind:
+        Wind
         {' '}
         {m.point.wind?.direction}
         °
+
+        <br />
+
+        Made good
+        {' '}
+        {formatMetersMadeGood(
+          m.metersMadeGood
+        )}
       </div>
     </Popup>
   </Marker>
