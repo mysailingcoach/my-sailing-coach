@@ -1,0 +1,499 @@
+diff --git a/backend/utils/gpxParser.js b/backend/utils/gpxParser.js
+index 4f5e6a1..c8d91f2 100644
+--- a/backend/utils/gpxParser.js
++++ b/backend/utils/gpxParser.js
+@@ -4,10 +4,15 @@ const MIN_TRACKPOINTS_FOR_LEG_DETECTION = 5;
+ const MIN_LEG_POINTS = 6;
+ const MANEUVER_WINDOW = 5;
+ const MANEUVER_COOLDOWN_POINTS = 12;
+ const MIN_MANEUVER_TURN_ANGLE = 70;
+ const GYBE_TURN_THRESHOLD = 140;
++const SMOOTHING_WINDOW = 5;
++const REL_WIND_TACK_CROSS_DEG = 35;
++const REL_WIND_GYBE_CROSS_DEG = 140;
++const MIN_MANEUVER_SECONDS = 4;
++const MAX_MANEUVER_SECONDS = 20;
+ const START_LINE_LOOKAHEAD_POINTS = 5;
+ const HEADING_CONSISTENCY_TARGET = 80;
+ 
+ export function parseGPXContent(data) {
+@@ -486,11 +491,186 @@ function detectManeuvers(trackpoints) {
+   if (
+     !Array.isArray(trackpoints) ||
+     trackpoints.length < MANEUVER_COOLDOWN_POINTS
+   ) {
+     return [];
+   }
++
++  const smoothedHeading = smoothHeadings(trackpoints, SMOOTHING_WINDOW);
++  const dynamicWindow = inferDynamicWindow(trackpoints);
++  const maneuverWindow = dynamicWindow.window;
++  const cooldownPoints = Math.max(
++    MANEUVER_COOLDOWN_POINTS,
++    dynamicWindow.cooldown
++  );
+ 
+   const maneuvers = [];
+   let lastIndex = -20;
+ 
+   for (
+-    let i = MANEUVER_WINDOW;
+-    i < trackpoints.length - MANEUVER_WINDOW;
++    let i = maneuverWindow;
++    i < trackpoints.length - maneuverWindow;
+     i++
+   ) {
+-    if (i - lastIndex < MANEUVER_COOLDOWN_POINTS) {
++    if (i - lastIndex < cooldownPoints) {
+       continue;
+     }
+ 
+-    const before = trackpoints[i - MANEUVER_WINDOW];
++    const before = trackpoints[i - maneuverWindow];
+     const current = trackpoints[i];
+-    const after = trackpoints[i + MANEUVER_WINDOW];
++    const after = trackpoints[i + maneuverWindow];
+ 
+     if (
+-      before.heading == null ||
+-      current.heading == null ||
+-      after.heading == null
++      smoothedHeading[i - maneuverWindow] == null ||
++      smoothedHeading[i] == null ||
++      smoothedHeading[i + maneuverWindow] == null
+     ) {
+       continue;
+     }
+ 
+     const turnBefore = signedAngleDelta(
+-      before.heading,
+-      current.heading
++      smoothedHeading[i - maneuverWindow],
++      smoothedHeading[i]
+     );
+     const turnAfter = signedAngleDelta(
+-      current.heading,
+-      after.heading
++      smoothedHeading[i],
++      smoothedHeading[i + maneuverWindow]
+     );
+ 
+     const netTurn = Math.abs(
+-      signedAngleDelta(before.heading, after.heading)
++      signedAngleDelta(
++        smoothedHeading[i - maneuverWindow],
++        smoothedHeading[i + maneuverWindow]
++      )
+     );
+ 
+     if (
+       Math.sign(turnBefore) === Math.sign(turnAfter) ||
+       netTurn < MIN_MANEUVER_TURN_ANGLE
+@@ -500,16 +680,28 @@ function detectManeuvers(trackpoints) {
+       continue;
+     }
+ 
+-    const type =
+-      netTurn >= GYBE_TURN_THRESHOLD
+-        ? 'Gybe'
+-        : 'Tack';
++    const windAwareType = classifyManeuverWithWind(
++      before,
++      current,
++      after,
++      smoothedHeading[i - maneuverWindow],
++      smoothedHeading[i + maneuverWindow]
++    );
++
++    const type = windAwareType || (
++      netTurn >= GYBE_TURN_THRESHOLD
++        ? 'Gybe'
++        : 'Tack'
++    );
++
+     const speedBefore = average(
+       trackpoints
+-        .slice(i - MANEUVER_WINDOW, i)
++        .slice(i - maneuverWindow, i)
+         .map(p => p.sog || 0)
+     );
+     const speedAfter = average(
+       trackpoints
+         .slice(
+           i + 1,
+-          i + MANEUVER_WINDOW + 1
++          i + maneuverWindow + 1
+         )
+         .map(p => p.sog || 0)
+     );
+@@ -522,8 +714,8 @@ function detectManeuvers(trackpoints) {
+           )
+         : 0;
+     const targetCourseDirection =
+       computeManeuverTargetDirection(
+-        trackpoints,
+-        i
++        trackpoints,
++        i
+       );
+     const metersMadeGood =
+       computeMetersMadeGoodAfterManeuver(
+@@ -550,9 +742,172 @@ function detectManeuvers(trackpoints) {
+ 
+     lastIndex = i;
+   }
+ 
+   return maneuvers;
+ }
++
++function inferDynamicWindow(trackpoints) {
++  const times = trackpoints
++    .map(p => p?.time ? new Date(p.time).getTime() : null)
++    .filter(t => Number.isFinite(t));
++
++  if (times.length < 3) {
++    return {
++      window: MANEUVER_WINDOW,
++      cooldown: MANEUVER_COOLDOWN_POINTS
++    };
++  }
++
++  const deltasSec = [];
++  for (let i = 1; i < times.length; i++) {
++    const d = (times[i] - times[i - 1]) / 1000;
++    if (Number.isFinite(d) && d > 0 && d < 120) {
++      deltasSec.push(d);
++    }
++  }
++
++  if (deltasSec.length === 0) {
++    return {
++      window: MANEUVER_WINDOW,
++      cooldown: MANEUVER_COOLDOWN_POINTS
++    };
++  }
++
++  const medianSec = quantile(deltasSec, 0.5);
++  const targetWindowSec = 6;
++  const targetCooldownSec = 14;
++
++  const window = Math.max(
++    3,
++    Math.min(
++      15,
++      Math.round(targetWindowSec / Math.max(0.2, medianSec))
++    )
++  );
++  const cooldown = Math.max(
++    MANEUVER_COOLDOWN_POINTS,
++    Math.round(targetCooldownSec / Math.max(0.2, medianSec))
++  );
++
++  return { window, cooldown };
++}
++
++function quantile(values, q) {
++  if (!Array.isArray(values) || values.length === 0) {
++    return 0;
++  }
++  const sorted = [...values].sort((a, b) => a - b);
++  const pos = (sorted.length - 1) * q;
++  const base = Math.floor(pos);
++  const rest = pos - base;
++  if (sorted[base + 1] !== undefined) {
++    return sorted[base] + rest * (sorted[base + 1] - sorted[base]);
++  }
++  return sorted[base];
++}
++
++function smoothHeadings(trackpoints, windowSize = 5) {
++  if (!Array.isArray(trackpoints) || trackpoints.length === 0) {
++    return [];
++  }
++
++  const half = Math.floor(Math.max(3, windowSize) / 2);
++  const out = new Array(trackpoints.length).fill(null);
++
++  for (let i = 0; i < trackpoints.length; i++) {
++    const windowVals = [];
++    for (let j = i - half; j <= i + half; j++) {
++      const h = trackpoints[j]?.heading;
++      if (Number.isFinite(h)) {
++        windowVals.push(normalizeAngle(h));
++      }
++    }
++    out[i] = circularMeanDirection(windowVals);
++  }
++  return out;
++}
++
++function classifyManeuverWithWind(
++  beforePoint,
++  currentPoint,
++  afterPoint,
++  beforeHeading,
++  afterHeading
++) {
++  const windDirection =
++    beforePoint?.wind?.direction ??
++    currentPoint?.wind?.direction ??
++    afterPoint?.wind?.direction;
++
++  if (!Number.isFinite(windDirection)) {
++    return null;
++  }
++
++  const relBefore = signedRelativeWindAngle(beforeHeading, windDirection);
++  const relAfter = signedRelativeWindAngle(afterHeading, windDirection);
++
++  if (relBefore == null || relAfter == null) {
++    return null;
++  }
++
++  const crossedZero =
++    Math.sign(relBefore) !== Math.sign(relAfter) &&
++    Math.abs(relBefore) >= REL_WIND_TACK_CROSS_DEG &&
++    Math.abs(relAfter) >= REL_WIND_TACK_CROSS_DEG;
++
++  if (crossedZero) {
++    return 'Tack';
++  }
++
++  const crossedDdw = crossedDeadDownwind(relBefore, relAfter);
++  if (crossedDdw) {
++    return 'Gybe';
++  }
++
++  return null;
++}
++
++function signedRelativeWindAngle(heading, windDirection) {
++  if (!Number.isFinite(heading) || !Number.isFinite(windDirection)) {
++    return null;
++  }
++  let angle = normalizeAngle(heading - windDirection);
++  if (angle > 180) {
++    angle -= 360;
++  }
++  return angle;
++}
++
++function crossedDeadDownwind(a, b) {
++  const nearNeg180A = a <= -REL_WIND_GYBE_CROSS_DEG;
++  const nearPos180A = a >= REL_WIND_GYBE_CROSS_DEG;
++  const nearNeg180B = b <= -REL_WIND_GYBE_CROSS_DEG;
++  const nearPos180B = b >= REL_WIND_GYBE_CROSS_DEG;
++
++  return (
++    (nearNeg180A && nearPos180B) ||
++    (nearPos180A && nearNeg180B)
++  );
++}
+ 
+ function computeManeuverTargetDirection(
+   trackpoints,
+   maneuverIndex
+ ) {
+diff --git a/frontend/src/components/RaceMap.jsx b/frontend/src/components/RaceMap.jsx
+index 11c2a8e..34d347f 100644
+--- a/frontend/src/components/RaceMap.jsx
++++ b/frontend/src/components/RaceMap.jsx
+@@ -133,60 +133,19 @@ export default function RaceMap({
+       !isNaN(mark.lon)
+   );
+-const maneuvers = [];
+-
+-if (providedManeuvers.length > 0) {
+-  providedManeuvers.forEach(maneuver => {
+-    const point = validTrackpoints.find(
+-      p => p.index === maneuver.index
+-    );
+-
+-    if (point) {
+-      maneuvers.push({
+-        type: maneuver.type,
+-        point,
+-        metersMadeGood: maneuver.metersMadeGood
+-      });
+-    }
+-  });
+-} else {
+-  for (
+-    let i = 20;
+-    i < validTrackpoints.length - 20;
+-    i++
+-  ) {
+-    const pt = validTrackpoints[i];
+-
+-    if (
+-      !pt.wind ||
+-      pt.heading == null ||
+-      validTrackpoints[i - 20]?.heading == null ||
+-      validTrackpoints[i + 20]?.heading == null
+-    ) {
+-      continue;
+-    }
+-
+-    const before =
+-      relativeWindAngle(
+-        validTrackpoints[i - 20].heading,
+-        pt.wind.direction
+-      );
+-
+-    const after =
+-      relativeWindAngle(
+-        validTrackpoints[i + 20].heading,
+-        pt.wind.direction
+-      );
+-
+-    if (
+-      (before < -30 && after > 30) ||
+-      (before > 30 && after < -30)
+-    ) {
+-      maneuvers.push({
+-        type: 'Tack',
+-        point: pt
+-      });
+-
+-      i += 50;
+-      continue;
+-    }
++const maneuvers = [];
++providedManeuvers.forEach(maneuver => {
++  const point = validTrackpoints.find(
++    p => p.index === maneuver.index
++  );
+ 
+-    if (
+-      (before < -120 && after > 120) ||
+-      (before > 120 && after < -120)
+-    ) {
+-      maneuvers.push({
+-        type: 'Gybe',
+-        point: pt
+-      });
+-
+-      i += 50;
+-    }
++  if (point) {
++    maneuvers.push({
++      type: maneuver.type,
++      point,
++      metersMadeGood: maneuver.metersMadeGood
++    });
+   }
+-}
++});
+   const windPoint =
+     [...validTrackpoints]
+       .reverse()
+diff --git a/backend/tests/test_maneuverClassification.js b/backend/tests/test_maneuverClassification.js
+new file mode 100644
+index 0000000..8da4ac1
+--- /dev/null
++++ b/backend/tests/test_maneuverClassification.js
+@@ -0,0 +1,132 @@
++import assert from 'node:assert/strict';
++import { computeAdvancedAnalysis } from '../utils/gpxParser.js';
++
++function buildTrackpoints({
++  headings = [],
++  windDirection = 0,
++  includeWind = true,
++  startTime = '2026-01-01T00:00:00.000Z',
++  stepSeconds = 1
++}) {
++  const t0 = new Date(startTime).getTime();
++  return headings.map((heading, idx) => ({
++    lat: 37 + idx * 0.0001,
++    lon: -122 + idx * 0.0001,
++    time: new Date(t0 + idx * stepSeconds * 1000).toISOString(),
++    heading,
++    sog: 8,
++    index: idx,
++    ...(includeWind
++      ? { wind: { direction: windDirection, speed: 12 } }
++      : {})
++  }));
++}
++
++function run() {
++  // Tack: cross head-to-wind (signed rel wind crosses 0).
++  const tackHeadings = [
++    40, 40, 40, 40, 40,
++    20, 5, 355, 340,
++    320, 320, 320, 320, 320
++  ];
++  const tackPoints = buildTrackpoints({
++    headings: tackHeadings,
++    windDirection: 0,
++    includeWind: true
++  });
++  const tackAnalysis = computeAdvancedAnalysis(tackPoints);
++  const tack = tackAnalysis.maneuvers[0];
++  assert.ok(tack, 'expected tack maneuver');
++  assert.equal(tack.type, 'Tack');
++
++  // Gybe: cross dead-downwind.
++  const gybeHeadings = [
++    170, 170, 170, 170, 170,
++    178, 182, 190, 200,
++    210, 210, 210, 210, 210
++  ];
++  const gybePoints = buildTrackpoints({
++    headings: gybeHeadings,
++    windDirection: 0,
++    includeWind: true
++  });
++  const gybeAnalysis = computeAdvancedAnalysis(gybePoints);
++  const gybe = gybeAnalysis.maneuvers[0];
++  assert.ok(gybe, 'expected gybe maneuver');
++  assert.equal(gybe.type, 'Gybe');
++
++  // Missing wind fallback should still detect maneuver by turn geometry.
++  const fallbackHeadings = [
++    40, 40, 40, 40, 40,
++    10, 350, 320,
++    320, 320, 320, 320, 320
++  ];
++  const fallbackPoints = buildTrackpoints({
++    headings: fallbackHeadings,
++    includeWind: false
++  });
++  const fallbackAnalysis = computeAdvancedAnalysis(fallbackPoints);
++  const fb = fallbackAnalysis.maneuvers[0];
++  assert.ok(fb, 'expected maneuver with missing wind');
++  assert.ok(fb.type === 'Tack' || fb.type === 'Gybe');
++
++  // Jitter scenario: no real maneuver, should not generate many false positives.
++  const jitter = [];
++  for (let i = 0; i < 120; i++) {
++    jitter.push(90 + (i % 2 === 0 ? 2 : -2));
++  }
++  const jitterPoints = buildTrackpoints({
++    headings: jitter,
++    windDirection: 0,
++    includeWind: true
++  });
++  const jitterAnalysis = computeAdvancedAnalysis(jitterPoints);
++  assert.ok(
++    jitterAnalysis.maneuvers.length <= 1,
++    `expected <=1 false maneuver in jitter case, got ${jitterAnalysis.maneuvers.length}`
++  );
++
++  console.log('✅ test_maneuverClassification passed');
++}
++
++run();
+diff --git a/README.md b/README.md
+index 8f6af7b..f2f3d85 100644
+--- a/README.md
++++ b/README.md
+@@ -10,6 +10,7 @@ My Free Sailing Coach is a free, open-source sailing performance analysis app t
+ - 📊 Review distance, duration, speed, and race details
+ - 🧭 Analyze auto-detected legs (upwind/downwind/reaching), VMG/TWA, and maneuver efficiency
+ - 🎥 Sync race video metadata and jump to maneuver moments
++- 🔄 Wind-aware maneuver detection (tack/gybe) with backend as single source of truth for map markers
+ - 📈 Compare race performance against historical trends
+ - 💾 Keep a local history of uploaded races
+ - 🌐 Run locally or deploy it to GitHub-connected hosting platforms
