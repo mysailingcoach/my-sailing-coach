@@ -16,9 +16,9 @@
   --color-border-focus: rgba(59, 130, 246, 0.7);
 
   /* Improved readability */
-  --color-text:       #ffffff;
+  --color-text:       #000000;
   --color-text-muted: #d1d5db;
-  --color-text-faint: #ffffff;
+  --color-text-faint: #000000;
 
   --color-accent:   #3b82f6;
   --color-accent-2: #06b6d4;
