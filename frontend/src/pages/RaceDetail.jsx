@@ -209,9 +209,6 @@ export default function RaceDetail() {
       <th className="px-4 py-2 text-left">Time</th>
     </tr>
   </thead>
-  ...
-</table>
-
               <tbody>
                 {(data.trackpoints || [])
                   .slice(0, 50)
