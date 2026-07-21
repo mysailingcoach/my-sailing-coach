@@ -192,16 +192,18 @@ export default function PerformanceMetrics({ analysis, comparative }) {
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-3 py-2 text-left">Leg</th>
-                  <th className="px-3 py-2 text-left">Type</th>
-                  <th className="px-3 py-2 text-left">Duration (h)</th>
-                  <th className="px-3 py-2 text-left">Distance (km)</th>
-                  <th className="px-3 py-2 text-left">Avg Speed</th>
-                </tr>
-              </thead>
+            <table className="w-full text-sm text-gray-800">
+  <thead className="bg-gray-100 text-gray-900">
+    <tr>
+      <th className="px-3 py-2 text-left">Leg</th>
+      <th className="px-3 py-2 text-left">Type</th>
+      <th className="px-3 py-2 text-left">Duration (h)</th>
+      <th className="px-3 py-2 text-left">Distance (km)</th>
+      <th className="px-3 py-2 text-left">Avg Speed</th>
+    </tr>
+  </thead>
+  ...
+</table>
               <tbody>
                 {legRows.map((leg, idx) => (
                   <tr key={`${leg.startIndex}-${leg.endIndex}`} className="border-b">
