@@ -101,7 +101,7 @@ h3 {
 }
 
 p {
-  color: var(--color-text-muted);
+  color: var(--color-text);
   line-height: 1.8;
 }
 
