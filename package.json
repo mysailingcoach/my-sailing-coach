@@ -1,7 +1,7 @@
 {
   "name": "sailing-coach",
   "version": "1.0.0",
-  "description": "My Free Sailing Coach - Sailing Performance Analysis",
+  "description": "My Sailing Coach - Sailing Performance Analysis",
   "private": true,
   "workspaces": [
     "frontend",
