@@ -202,8 +202,6 @@ export default function PerformanceMetrics({ analysis, comparative }) {
       <th className="px-3 py-2 text-left">Avg Speed</th>
     </tr>
   </thead>
-  ...
-</table>
               <tbody>
                 {legRows.map((leg, idx) => (
                   <tr key={`${leg.startIndex}-${leg.endIndex}`} className="border-b">
