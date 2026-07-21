@@ -36,7 +36,7 @@ async function run() {
       speedAfter: 13.7,
       metersMadeGood: 187.4
     }),
-    'Δ heading 82.4° • speed 14.20 → 13.70 km/h • MMG 187 m',
+    'Δ heading 82.4° • speed 14.20 → 13.70 km/h',
     'maneuver summary rendering'
   );
 
@@ -46,7 +46,7 @@ async function run() {
       index: 18,
       metersMadeGood: 92.2
     }),
-    'Tack • point 18 • MMG 92 m',
+    'Tack • point 18 • made good 92 m',
     'maneuver list label rendering'
   );
 

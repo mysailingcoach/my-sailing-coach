@@ -14,8 +14,7 @@ export function buildManeuverSummary(maneuver = {}) {
   return (
     `Δ heading ${formatNumber(maneuver.headingChange, 1)}°` +
     ` • speed ${formatNumber(maneuver.speedBefore, 2)}` +
-    ` → ${formatNumber(maneuver.speedAfter, 2)} km/h` +
-    ` • MMG ${formatMetersMadeGood(maneuver.metersMadeGood)}`
+    ` → ${formatNumber(maneuver.speedAfter, 2)} km/h`
   );
 }
 
@@ -24,7 +23,7 @@ export function buildManeuverListLabel(
 ) {
   return (
     `${maneuver.type || 'Maneuver'} • point ` +
-    `${maneuver.index ?? 'N/A'} • MMG ` +
+    `${maneuver.index ?? 'N/A'} • made good ` +
     `${formatMetersMadeGood(maneuver.metersMadeGood)}`
   );
 }

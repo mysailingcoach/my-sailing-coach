@@ -711,9 +711,10 @@ function computeMetersMadeGoodAfterManeuver(
     );
 
   return Number(
-    // Made good is stored as forward progress along the
-    // intended course axis, so regressing away from that
-    // target direction is normalized to zero.
+    // Meters made good captures effective forward progress
+    // along the intended post-maneuver course axis, so any
+    // regression away from that target direction is
+    // normalized to zero.
     Math.max(0, projectedMeters).toFixed(1)
   );
 }
