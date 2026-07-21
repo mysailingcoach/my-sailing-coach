@@ -130,7 +130,7 @@ export default function RaceDetail() {
       <div className="flex justify-center items-center h-96">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">
+          <p className="mt-4 text-black">
             Loading race data...
           </p>
         </div>
@@ -157,11 +157,11 @@ export default function RaceDetail() {
   return (
     <div className="space-y-8">
       <div className="bg-white rounded-lg shadow-md p-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
+        <h1 className="text-3xl font-bold text-black mb-2">
           {race.name}
         </h1>
 
-        <p className="text-gray-600">
+        <p className="text-black">
           Uploaded:{' '}
           {race.uploadDate
             ? `${new Date(race.uploadDate).toLocaleDateString()} at ${new Date(race.uploadDate).toLocaleTimeString()}`
@@ -173,7 +173,7 @@ export default function RaceDetail() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2 rounded-t-lg text-sm font-semibold ${activeTab === tab.key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              className={`px-4 py-2 rounded-t-lg text-sm font-semibold ${activeTab === tab.key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-black hover:bg-gray-200'}`}
             >
               {tab.label}
             </button>
@@ -193,13 +193,13 @@ export default function RaceDetail() {
 
       {activeTab === 'overview' && (
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-bold mb-4 text-gray-800">
+          <h2 className="text-2xl font-bold mb-4 text-black">
             Route Details
           </h2>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-gray-800">
-  <thead className="bg-gray-100 text-gray-900">
+            <table className="w-full text-sm text-black">
+  <thead className="bg-gray-100 text-black">
     <tr>
       <th className="px-4 py-2 text-left">Point #</th>
       <th className="px-4 py-2 text-left">Latitude</th>
@@ -237,7 +237,7 @@ export default function RaceDetail() {
                         {safeNumber(point.heading, 1)}
                       </td>
 
-                      <td className="px-4 py-2 text-xs text-gray-700">
+                      <td className="px-4 py-2 text-xs text-black">
   {point.time ? new Date(point.time).toLocaleTimeString() : 'N/A'}
 </td>
                     </tr>
@@ -246,7 +246,7 @@ export default function RaceDetail() {
             </table>
 
             {(data.trackpoints || []).length > 50 && (
-              <p className="text-sm text-gray-600 p-4">
+              <p className="text-sm text-black p-4">
                 Showing 50 of{' '}
                 {data.trackpoints.length} points
               </p>
@@ -265,10 +265,10 @@ export default function RaceDetail() {
       {activeTab === 'video' && (
         <div className="space-y-6">
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            <h2 className="text-2xl font-bold text-black mb-4">
               Video Synchronization
             </h2>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-black mb-4">
               Attach a race video URL, set a sync offset, and jump directly to maneuver moments.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -307,7 +307,7 @@ export default function RaceDetail() {
                 aria-label="Sailing race video playback"
               />
               <div>
-                <h3 className="font-bold text-gray-800 mb-2">Maneuver Jump List</h3>
+                <h3 className="font-bold text-black mb-2">Maneuver Jump List</h3>
                 <div className="space-y-2">
                   {(data.analysis?.maneuvers || []).slice(0, 20).map((maneuver, idx) => (
                     <button
@@ -331,10 +331,10 @@ export default function RaceDetail() {
 
       {activeTab === 'trends' && (
         <div className="bg-white rounded-lg shadow-md p-6 space-y-5">
-          <h2 className="text-2xl font-bold text-gray-800">Performance Trends</h2>
+          <h2 className="text-2xl font-bold text-black">Performance Trends</h2>
 
           {trendBars.length === 0 ? (
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-black">
               Upload additional races to populate historical trend analysis.
             </p>
           ) : (
@@ -342,8 +342,8 @@ export default function RaceDetail() {
               {trendBars.map(item => (
                 <div key={item.id}>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium text-gray-700">{item.name}</span>
-                    <span className="text-gray-600">{safeNumber(item.avgSpeed, 2)} km/h</span>
+                    <span className="font-medium text-black">{item.name}</span>
+                    <span className="text-black">{safeNumber(item.avgSpeed, 2)} km/h</span>
                   </div>
                   <div className="h-3 bg-gray-100 rounded">
                     <div
@@ -360,7 +360,7 @@ export default function RaceDetail() {
             </div>
           )}
 
-          <div className="border-t pt-4 text-sm text-gray-700">
+          <div className="border-t pt-4 text-sm text-black">
             <div>Best segment: {race.comparative?.personalBestSegment?.type || 'N/A'} ({safeNumber(race.comparative?.personalBestSegment?.avgSpeed, 2)} km/h)</div>
             <div>Worst segment: {race.comparative?.personalWorstSegment?.type || 'N/A'} ({safeNumber(race.comparative?.personalWorstSegment?.avgSpeed, 2)} km/h)</div>
           </div>
