@@ -136,12 +136,7 @@ export default function Home() {
           }}
         />
 
-        {/* Floating boat decoration */}
-        <div
-          className="pointer-events-none absolute top-8 right-10 text-[160px] md:text-[220px] leading-none select-none animate-float opacity-10"
-        >
-          ⛵
-        </div>
+        
 
         <div className="relative max-w-3xl">
           {/* Badge */}
