@@ -198,29 +198,19 @@ export default function RaceDetail() {
           </h2>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-4 py-2 text-left">
-                    Point #
-                  </th>
-                  <th className="px-4 py-2 text-left">
-                    Latitude
-                  </th>
-                  <th className="px-4 py-2 text-left">
-                    Longitude
-                  </th>
-                  <th className="px-4 py-2 text-left">
-                    SOG
-                  </th>
-                  <th className="px-4 py-2 text-left">
-                    Heading
-                  </th>
-                  <th className="px-4 py-2 text-left">
-                    Time
-                  </th>
-                </tr>
-              </thead>
+            <table className="w-full text-sm text-gray-800">
+  <thead className="bg-gray-100 text-gray-900">
+    <tr>
+      <th className="px-4 py-2 text-left">Point #</th>
+      <th className="px-4 py-2 text-left">Latitude</th>
+      <th className="px-4 py-2 text-left">Longitude</th>
+      <th className="px-4 py-2 text-left">SOG</th>
+      <th className="px-4 py-2 text-left">Heading</th>
+      <th className="px-4 py-2 text-left">Time</th>
+    </tr>
+  </thead>
+  ...
+</table>
 
               <tbody>
                 {(data.trackpoints || [])
@@ -250,13 +240,9 @@ export default function RaceDetail() {
                         {safeNumber(point.heading, 1)}
                       </td>
 
-                      <td className="px-4 py-2 text-xs">
-                        {point.time
-                          ? new Date(
-                              point.time
-                            ).toLocaleTimeString()
-                          : 'N/A'}
-                      </td>
+                      <td className="px-4 py-2 text-xs text-gray-700">
+  {point.time ? new Date(point.time).toLocaleTimeString() : 'N/A'}
+</td>
                     </tr>
                   ))}
               </tbody>
