@@ -11,11 +11,20 @@ export function formatMetersMadeGood(value) {
 }
 
 export function buildManeuverSummary(maneuver = {}) {
-  return `Δ heading ${formatNumber(maneuver.headingChange, 1)}° • speed ${formatNumber(maneuver.speedBefore, 2)} → ${formatNumber(maneuver.speedAfter, 2)} km/h • MMG ${formatMetersMadeGood(maneuver.metersMadeGood)}`;
+  return (
+    `Δ heading ${formatNumber(maneuver.headingChange, 1)}°` +
+    ` • speed ${formatNumber(maneuver.speedBefore, 2)}` +
+    ` → ${formatNumber(maneuver.speedAfter, 2)} km/h` +
+    ` • MMG ${formatMetersMadeGood(maneuver.metersMadeGood)}`
+  );
 }
 
 export function buildManeuverListLabel(
   maneuver = {}
 ) {
-  return `${maneuver.type || 'Maneuver'} • point ${maneuver.index ?? 'N/A'} • MMG ${formatMetersMadeGood(maneuver.metersMadeGood)}`;
+  return (
+    `${maneuver.type || 'Maneuver'} • point ` +
+    `${maneuver.index ?? 'N/A'} • MMG ` +
+    `${formatMetersMadeGood(maneuver.metersMadeGood)}`
+  );
 }
