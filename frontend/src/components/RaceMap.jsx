@@ -396,7 +396,7 @@ if (providedManeuvers.length > 0) {
 
         <br />
 
-        Heading:
+        Heading
         {' '}
         {Math.round(
           m.point.heading || 0
@@ -405,14 +405,14 @@ if (providedManeuvers.length > 0) {
 
         <br />
 
-        Wind:
+        Wind
         {' '}
         {m.point.wind?.direction}
         °
 
         <br />
 
-        Made good:
+        Made good
         {' '}
         {formatMetersMadeGood(
           m.metersMadeGood

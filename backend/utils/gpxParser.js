@@ -644,6 +644,13 @@ function computeManeuverTargetDirection(
     : Number(targetDirection.toFixed(1));
 }
 
+/**
+ * Projects the immediate post-maneuver displacement onto the
+ * maneuver's intended course axis and returns the forward
+ * meters made good. Regressing away from the target axis is
+ * normalized to zero so the metric reflects effective
+ * progress after the tack or gybe.
+ */
 function computeMetersMadeGoodAfterManeuver(
   trackpoints,
   maneuverIndex,
@@ -711,10 +718,6 @@ function computeMetersMadeGoodAfterManeuver(
     );
 
   return Number(
-    // Meters made good captures effective forward progress
-    // along the intended post-maneuver course axis, so any
-    // regression away from that target direction is
-    // normalized to zero.
     Math.max(0, projectedMeters).toFixed(1)
   );
 }

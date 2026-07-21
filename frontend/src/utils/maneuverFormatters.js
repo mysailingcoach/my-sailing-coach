@@ -5,9 +5,11 @@ export function formatNumber(value, decimals = 1) {
 }
 
 export function formatMetersMadeGood(value) {
-  return value != null && !isNaN(value)
-    ? `${formatNumber(value, 0)} m`
-    : 'N/A';
+  const formattedValue = formatNumber(value, 0);
+
+  return formattedValue === 'N/A'
+    ? formattedValue
+    : `${formattedValue} m`;
 }
 
 export function buildManeuverSummary(maneuver = {}) {
