@@ -1,67 +1,63 @@
-import {
-  segmentLegsByMarks
-} from './segmentLegs.js';
+import { segmentLegsByMarks } from './segmentLegs.js';
+import { calculateLegMetrics } from './legMetrics.js';
+import { calculateRating } from './ratings.js';
+import { createSummary } from './summary.js';
 
-import {
-  calculateLegMetrics
-} from './legMetrics.js';
+export async function analyzeRaceAI(race) {
+  const trackpoints = race?.data?.trackpoints || [];
+  const marks = race?.data?.marks || [];
+  const analysis = race?.data?.analysis || {};
 
-import {
-  calculateRating
-} from './ratings.js';
+  // Handle empty or invalid races
+  if (!trackpoints.length) {
+    return {
+      legs: [],
+      bestLeg: null,
+      worstLeg: null,
+      overallRating: 'Unknown',
+      summary: 'No trackpoints available.'
+    };
+  }
 
-import {
-  createSummary
-} from './summary.js';
+  // Split race into legs
+  const legs = segmentLegsByMarks(
+    trackpoints,
+    marks
+  );
 
-export async function analyzeRaceAI(
-  race
-) {
-  const trackpoints =
-    race.data.trackpoints || [];
+  // Calculate metrics for each leg
+  const legStats = calculateLegMetrics(
+    trackpoints,
+    legs
+  );
 
-  const marks =
-    race.data.marks || [];
-
-  const legs =
-    segmentLegsByMarks(
-      trackpoints,
-      marks
-    );
-
-  const legStats =
-    calculateLegMetrics(
-      trackpoints,
-      legs
-    );
-
-  const sorted = [...legStats].sort(
-    (a, b) =>
-      b.avgSpeed - a.avgSpeed
+  // Rank legs by average speed
+  const sortedLegs = [...legStats].sort(
+    (a, b) => b.avgSpeed - a.avgSpeed
   );
 
   const bestLeg =
-    sorted[0] || null;
+    sortedLegs.length > 0
+      ? sortedLegs[0]
+      : null;
 
   const worstLeg =
-    sorted[
-      sorted.length - 1
-    ] || null;
+    sortedLegs.length > 0
+      ? sortedLegs[sortedLegs.length - 1]
+      : null;
 
-  const overallRating =
-    calculateRating(
-      race.data.analysis
-        ?.avgSpeed,
-      race.data.analysis
-        ?.maxSpeed
-    );
+  // Generate overall rating
+  const overallRating = calculateRating(
+    analysis.avgSpeed,
+    analysis.maxSpeed
+  );
 
-  const summary =
-    createSummary(
-      bestLeg,
-      worstLeg,
-      overallRating
-    );
+  // Generate summary text
+  const summary = createSummary(
+    bestLeg,
+    worstLeg,
+    overallRating
+  );
 
   return {
     legs: legStats,
