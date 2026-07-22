@@ -1,5 +1,8 @@
 // Lightweight AI analysis worker (rule-based) to produce best/worst leg and overall rating
-import { calculateDistance } from './gpxParser.js';
+import { segmentLegsByMarks } from './analysis/segmentLegs.js';
+import { calculateLegMetrics } from './analysis/legMetrics.js';
+import { calculateRating } from './analysis/ratings.js';
+import { createSummary } from './analysis/summary.js';
 
 function segmentLegsByMarks(trackpoints, marks) {
   const legs = [];
