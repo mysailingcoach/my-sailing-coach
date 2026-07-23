@@ -34,7 +34,12 @@ export default function RaceDetail() {
     const fetchRace = async () => {
       try {
         const response = await axios.get(getApiUrl(`/races/${id}`));
+console.log("API response:", response.data);
+console.log("Race data:", response.data.data);
+console.log("Analysis:", response.data.data?.analysis);
+console.log("AI:", response.data.data?.analysis?.ai);
 
+setRace(response.data);
         setRace(response.data);
         setVideoUrl(response.data?.data?.video?.url || '');
         setVideoOffset(response.data?.data?.video?.offsetSeconds || 0);
@@ -150,14 +155,12 @@ export default function RaceDetail() {
       </div>
     );
   }
+const data = race.data || {};
 
-  const data = race.data || {};
-console.log("AI:", data.analysis.ai);
-  const safeNumber = (value, decimals) => {
-    return value != null && !isNaN(value)
-      ? Number(value).toFixed(decimals)
-      : 'N/A';
-  };
+console.log("Race:", race);
+console.log("Data:", race.data);
+console.log("Analysis:", race.data?.analysis);
+console.log("AI:", race.data?.analysis?.ai);
 
   return (
     <div className="space-y-8">
