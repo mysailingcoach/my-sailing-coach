@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import RaceMap from '../components/RaceMap';
+import RaceAnalysisCard from '../components/RaceAnalysisCard';
 import PerformanceMetrics from '../components/PerformanceMetrics';
 import { getApiUrl } from '../api/client';
 import {
@@ -262,6 +263,9 @@ export default function RaceDetail() {
     </div>
   )}
 </div>
+<RaceAnalysisCard
+  analysis={data.analysis}
+/>
             Route Details
           </h2>
 
