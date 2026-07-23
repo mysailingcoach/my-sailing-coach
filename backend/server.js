@@ -294,7 +294,31 @@ console.log("UPLOAD ENDPOINT HIT");
         raceId
       );
 
+// --------------------
+// AI Analysis
+// --------------------
 
+try {
+  console.log("===== STARTING AI =====");
+
+  const ai = await analyzeRaceAI({
+    id: raceId,
+    data: raceData
+  });
+
+  console.dir(ai, { depth: null });
+
+  raceData.analysis = raceData.analysis || {};
+  raceData.analysis.ai = ai;
+
+  await updateRaceData(raceId, raceData);
+
+  console.log("===== AI SAVED =====");
+
+} catch (err) {
+  console.error("AI failed");
+  console.error(err);
+}
 
       // Return finished data
 
