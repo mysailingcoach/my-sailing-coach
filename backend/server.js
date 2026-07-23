@@ -316,54 +316,42 @@ app.post(
 
       // AI runs after response
 
-      (async()=>{
+      (async () => {
 
-        try {
+  console.log("===== AI STARTED =====");
 
+  try {
 
-          const ai = await analyzeRaceAI({
-  id: raceId,
-  data: raceData
-});
+    const ai = await analyzeRaceAI({
+      id: raceId,
+      data: raceData
+    });
 
-console.log("AI RESULT:", ai);
+    console.log("AI RESULT:");
+    console.dir(ai, { depth: null });
 
-raceData.analysis =
-  raceData.analysis || {};
+    raceData.analysis =
+      raceData.analysis || {};
 
-raceData.analysis.ai = ai;
+    raceData.analysis.ai = ai;
 
-console.log("Saving AI to database...");
+    console.log("Saving AI...");
 
-await updateRaceData(
-  raceId,
-  raceData
-);
+    await updateRaceData(
+      raceId,
+      raceData
+    );
 
-console.log("AI saved successfully.");
+    console.log("===== AI SAVED =====");
 
+  } catch (error) {
 
+    console.error("===== AI FAILED =====");
+    console.error(error);
 
-          console.log(
-            'AI saved:',
-            raceId
-          );
+  }
 
-
-
-        } catch(error) {
-
-
-          console.error(
-            'AI error:',
-            error
-          );
-
-
-        }
-
-
-      })();
+})();
 
 
 
