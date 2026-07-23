@@ -11,6 +11,7 @@ import {
 
 const TABS = [
   { key: 'overview', label: 'Overview' },
+  { key: 'analysis', label: 'Race Analysis' },
   { key: 'metrics', label: 'Advanced Metrics' },
   { key: 'video', label: 'Video Sync' },
   { key: 'trends', label: 'Performance Trends' }
@@ -265,7 +266,50 @@ export default function RaceDetail() {
 </div>
 <RaceAnalysisCard
   analysis={data.analysis}
-/>
+/>    {/* Leg Performance */}
+    {data.analysis?.legs?.length > 0 && (
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 className="text-2xl font-bold mb-4">
+          Leg Performance
+        </h2>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          {data.analysis.legs.map((leg, index) => (
+            <div
+              key={index}
+              className="border rounded-lg p-4"
+            >
+              <h3 className="font-bold">
+                Leg {index + 1}
+              </h3>
+
+              <div className="w-full bg-gray-200 rounded-full h-3 mt-2">
+                <div
+                  className="bg-blue-600 h-3 rounded-full"
+                  style={{
+                    width: `${leg.score}%`
+                  }}
+                />
+              </div>
+
+              <p className="mt-2 text-xl font-bold">
+                {leg.score}/100
+              </p>
+
+              <p>{leg.rating}</p>
+
+              <p>
+                Speed: {leg.avgSpeed} km/h
+              </p>
+
+              <p>
+                Distance: {leg.distance} km
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
             Route Details
           </h2>
 
@@ -326,7 +370,107 @@ export default function RaceDetail() {
           </div>
         </div>
       )}
+{activeTab === 'analysis' && (
+  <div className="space-y-6">
 
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <h2 className="text-3xl font-bold mb-2">
+        Race Analysis
+      </h2>
+
+      <p className="text-gray-600">
+        AI-generated performance analysis.
+      </p>
+    </div>
+
+    <div className="bg-white rounded-lg shadow-md p-6">
+
+      <h3 className="text-xl font-bold mb-4">
+        Overall Rating
+      </h3>
+
+      <div className="text-5xl font-bold text-blue-600">
+        {data.analysis?.overallRating || "Unknown"}
+      </div>
+
+      <p className="mt-4">
+        {data.analysis?.summary}
+      </p>
+
+    </div>
+
+    {data.analysis?.legs?.length > 0 && (
+
+      <div className="bg-white rounded-lg shadow-md p-6">
+
+        <h3 className="text-xl font-bold mb-4">
+          Leg Performance
+        </h3>
+
+        <div className="grid md:grid-cols-2 gap-4">
+
+          {data.analysis.legs.map((leg, index) => (
+
+            <div
+              key={index}
+              className="border rounded-lg p-4"
+            >
+
+              <h4 className="font-bold text-lg">
+                Leg {index + 1}
+              </h4>
+
+              <div className="w-full bg-gray-200 rounded-full h-3 mt-3">
+
+                <div
+                  className="bg-blue-600 h-3 rounded-full"
+                  style={{
+                    width: `${leg.score}%`
+                  }}
+                />
+
+              </div>
+
+              <div className="mt-3 text-2xl font-bold">
+
+                {leg.score}/100
+
+              </div>
+
+              <div className="text-blue-700 font-semibold">
+
+                {leg.rating}
+
+              </div>
+
+              <div className="mt-3">
+
+                Average Speed:
+                {" "}
+                {leg.avgSpeed} km/h
+
+              </div>
+
+              <div>
+
+                Distance:
+                {" "}
+                {leg.distance} km
+
+              </div>
+
+            </div>
+
+          ))}
+
+        </div>
+
+      </div>
+
+    )}
+
+  </div>
+)}
       {activeTab === 'metrics' && (
         <PerformanceMetrics
           analysis={data.analysis}

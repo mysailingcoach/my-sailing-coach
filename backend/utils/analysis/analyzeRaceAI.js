@@ -2,6 +2,7 @@ import { segmentLegsByMarks } from './segmentLegs.js';
 import { calculateLegMetrics } from './legMetrics.js';
 import { calculateRating } from './ratings.js';
 import { createSummary } from './summary.js';
+import { scoreLegs } from './legScores.js';
 import { generateInsights } from './insights.js';
 import { generateRecommendations } from './recommendations.js';
 
@@ -34,10 +35,12 @@ export async function analyzeRaceAI(race) {
     trackpoints,
     legs
   );
+  
+const scoredLegs = scoreLegs(legStats);
 
   // Generate insights
   const insights = generateInsights(
-    legStats
+    scoredLegs
   );
 
   // Generate recommendations
@@ -46,8 +49,8 @@ export async function analyzeRaceAI(race) {
   );
 
   // Rank legs by average speed
-  const sortedLegs = [...legStats].sort(
-    (a, b) => b.avgSpeed - a.avgSpeed
+  const sortedLegs = [...scoredLegs].sort(
+    (a, b) => b.score - a.score
   );
 
   const bestLeg =
@@ -75,7 +78,7 @@ export async function analyzeRaceAI(race) {
   );
 
   return {
-    legs: legStats,
+    legs: scoredLegs,
     bestLeg,
     worstLeg,
     overallRating,
