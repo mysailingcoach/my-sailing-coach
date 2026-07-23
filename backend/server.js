@@ -1,3 +1,4 @@
+console.log("========== BACKEND SERVER.JS ==========");
 import 'dotenv/config';
 
 import express from 'express';
@@ -23,7 +24,7 @@ import { enrichTrackpointsWithWeather } from './utils/weather.js';
 
 import raceRoutes from './routes/races.js';
 import authRoutes from './routes/auth.js';
-console.log("***** SERVER STARTED *****");
+console.log("========== UPLOAD ROUTE ==========");
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
