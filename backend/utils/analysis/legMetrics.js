@@ -1,5 +1,16 @@
 import { calculateDistance } from '../gpxParser.js';
 
+function calculateEfficiency(
+  actualDistance,
+  directDistance
+) {
+  if (!actualDistance) {
+    return 0;
+  }
+
+  return directDistance / actualDistance;
+}
+
 export function calculateLegMetrics(
   trackpoints,
   legs
@@ -7,8 +18,8 @@ export function calculateLegMetrics(
   const legStats = [];
 
   for (const leg of legs) {
-    let dist = 0;
-    let speeds = [];
+    let distance = 0;
+    const speeds = [];
 
     for (
       let i = leg.start + 1;
@@ -26,7 +37,7 @@ export function calculateLegMetrics(
           curr.lon
         );
 
-      dist += segmentDistance;
+      distance += segmentDistance;
 
       if (prev.time && curr.time) {
         const dt =
@@ -46,19 +57,58 @@ export function calculateLegMetrics(
     const avgSpeed =
       speeds.length > 0
         ? speeds.reduce(
-            (a, b) => a + b,
+            (sum, speed) => sum + speed,
             0
           ) / speeds.length
         : 0;
 
+    const maxSpeed =
+      speeds.length > 0
+        ? Math.max(...speeds)
+        : 0;
+
+    const startPoint =
+      trackpoints[leg.start];
+
+    const endPoint =
+      trackpoints[leg.end];
+
+    const directDistance =
+      calculateDistance(
+        startPoint.lat,
+        startPoint.lon,
+        endPoint.lat,
+        endPoint.lon
+      );
+
+    const efficiency =
+      calculateEfficiency(
+        distance,
+        directDistance
+      );
+
     legStats.push({
       start: leg.start,
       end: leg.end,
+
       distance: Number(
-        dist.toFixed(2)
+        distance.toFixed(2)
       ),
+
+      directDistance: Number(
+        directDistance.toFixed(2)
+      ),
+
+      efficiency: Number(
+        (efficiency * 100).toFixed(1)
+      ),
+
       avgSpeed: Number(
         avgSpeed.toFixed(2)
+      ),
+
+      maxSpeed: Number(
+        maxSpeed.toFixed(2)
       )
     });
   }

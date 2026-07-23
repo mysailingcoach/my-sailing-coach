@@ -197,6 +197,71 @@ export default function RaceDetail() {
       {activeTab === 'overview' && (
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-2xl font-bold mb-4 text-black">
+            <div className="bg-white rounded-lg shadow-md p-6">
+  <h2 className="text-2xl font-bold mb-4 text-black">
+    Race Analysis
+  </h2>
+
+  <div className="space-y-2">
+    <div>
+      <strong>Overall Rating:</strong>{' '}
+      {data.analysis?.overallRating || 'N/A'}
+    </div>
+
+    <div>
+      <strong>Summary:</strong>{' '}
+      {data.analysis?.summary || 'N/A'}
+    </div>
+  </div>
+
+  {data.analysis?.insights?.length > 0 && (
+    <div className="mt-6">
+      <h3 className="text-lg font-bold mb-2">
+        Insights
+      </h3>
+
+      <ul className="space-y-2">
+        {data.analysis.insights.map(
+          (insight, index) => (
+            <li
+              key={index}
+              className="border rounded p-3"
+            >
+              {insight.message}
+            </li>
+          )
+        )}
+      </ul>
+    </div>
+  )}
+
+  {data.analysis?.recommendations?.length > 0 && (
+    <div className="mt-6">
+      <h3 className="text-lg font-bold mb-2">
+        Recommendations
+      </h3>
+
+      <ul className="space-y-2">
+        {data.analysis.recommendations.map(
+          (recommendation, index) => (
+            <li
+              key={index}
+              className="border rounded p-3"
+            >
+              <div className="font-semibold">
+                {recommendation.title}
+              </div>
+
+              <div className="text-sm text-gray-600">
+                {recommendation.impact}
+              </div>
+            </li>
+          )
+        )}
+      </ul>
+    </div>
+  )}
+</div>
             Route Details
           </h2>
 

@@ -35,6 +35,16 @@ export async function analyzeRaceAI(
       legs
     );
 
+const insights =
+  generateInsights(
+    legStats
+  );
+
+const recommendations =
+  generateRecommendations(
+    insights
+  );
+
   const sorted = [...legStats].sort(
     (a, b) =>
       b.avgSpeed - a.avgSpeed
@@ -64,10 +74,15 @@ export async function analyzeRaceAI(
     );
 
   return {
-    legs: legStats,
-    bestLeg,
-    worstLeg,
-    overallRating,
-    summary
-  };
+  legs: legStats,
+
+  bestLeg,
+  worstLeg,
+
+  insights,
+  recommendations,
+
+  overallRating,
+  summary
+};
 }
