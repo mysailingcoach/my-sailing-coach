@@ -152,7 +152,7 @@ export default function RaceDetail() {
   }
 
   const data = race.data || {};
-console.log(data.analysis);
+console.log("AI:", data.analysis.ai);
   const safeNumber = (value, decimals) => {
     return value != null && !isNaN(value)
       ? Number(value).toFixed(decimals)
