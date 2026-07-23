@@ -321,31 +321,26 @@ app.post(
         try {
 
 
-          const ai =
-            await analyzeRaceAI({
+          const ai = await analyzeRaceAI({
+  id: raceId,
+  data: raceData
+});
 
-              id: raceId,
+console.log("AI RESULT:", ai);
 
-              data: raceData
+raceData.analysis =
+  raceData.analysis || {};
 
-            });
+raceData.analysis.ai = ai;
 
+console.log("Saving AI to database...");
 
+await updateRaceData(
+  raceId,
+  raceData
+);
 
-          raceData.analysis =
-            raceData.analysis || {};
-
-
-
-          raceData.analysis.ai =
-            ai;
-
-
-
-          await updateRaceData(
-            raceId,
-            raceData
-          );
+console.log("AI saved successfully.");
 
 
 
