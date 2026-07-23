@@ -318,29 +318,31 @@ console.log("UPLOAD ENDPOINT HIT");
       // AI runs after response
 
       (async () => {
+  console.log("=== AI START ===");
+
   try {
-    console.log("===== STARTING AI =====");
+    console.log("Calling analyzeRaceAI...");
 
     const ai = await analyzeRaceAI({
       id: raceId,
       data: raceData
     });
 
-    console.log("===== AI RESULT =====");
+    console.log("AI RESULT:");
     console.dir(ai, { depth: null });
 
     raceData.analysis = raceData.analysis || {};
     raceData.analysis.ai = ai;
 
-    console.log("===== SAVING AI =====");
+    console.log("Saving AI to database...");
 
     await updateRaceData(raceId, raceData);
 
-    console.log("===== AI SAVED =====");
+    console.log("AI SAVED");
+
   } catch (error) {
-    console.error("===== AI FAILED =====");
+    console.error("AI FAILED:");
     console.error(error);
-    console.error(error.stack);
   }
 })();
 
