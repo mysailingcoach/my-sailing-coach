@@ -2,6 +2,8 @@ import { segmentLegsByMarks } from './segmentLegs.js';
 import { calculateLegMetrics } from './legMetrics.js';
 import { calculateRating } from './ratings.js';
 import { createSummary } from './summary.js';
+import { generateInsights } from './insights.js';
+import { generateRecommendations } from './recommendations.js';
 
 export async function analyzeRaceAI(race) {
   const trackpoints = race?.data?.trackpoints || [];
@@ -15,7 +17,9 @@ export async function analyzeRaceAI(race) {
       bestLeg: null,
       worstLeg: null,
       overallRating: 'Unknown',
-      summary: 'No trackpoints available.'
+      summary: 'No trackpoints available.',
+      insights: [],
+      recommendations: []
     };
   }
 
@@ -25,46 +29,25 @@ export async function analyzeRaceAI(race) {
     marks
   );
 
-  // Calculate metrics for each leg
+  // Calculate metrics
   const legStats = calculateLegMetrics(
     trackpoints,
     legs
   );
 
-<<<<<<< HEAD
-  const marks =
-    race.data.marks || [];
-
-  const legs =
-    segmentLegsByMarks(
-      trackpoints,
-      marks
-    );
-
-  const legStats =
-    calculateLegMetrics(
-      trackpoints,
-      legs
-    );
-
-const insights =
-  generateInsights(
+  // Generate insights
+  const insights = generateInsights(
     legStats
   );
 
-const recommendations =
-  generateRecommendations(
+  // Generate recommendations
+  const recommendations = generateRecommendations(
     insights
   );
 
-  const sorted = [...legStats].sort(
-    (a, b) =>
-      b.avgSpeed - a.avgSpeed
-=======
   // Rank legs by average speed
   const sortedLegs = [...legStats].sort(
     (a, b) => b.avgSpeed - a.avgSpeed
->>>>>>> 29fdf5b03ae3fd101889e3e30192f733683dd722
   );
 
   const bestLeg =
@@ -77,29 +60,27 @@ const recommendations =
       ? sortedLegs[sortedLegs.length - 1]
       : null;
 
-  // Generate overall rating
+  // Overall rating
   const overallRating = calculateRating(
     analysis.avgSpeed,
     analysis.maxSpeed
   );
 
-  // Generate summary text
+  // Summary
   const summary = createSummary(
     bestLeg,
     worstLeg,
-    overallRating
+    overallRating,
+    insights
   );
 
   return {
-  legs: legStats,
-
-  bestLeg,
-  worstLeg,
-
-  insights,
-  recommendations,
-
-  overallRating,
-  summary
-};
+    legs: legStats,
+    bestLeg,
+    worstLeg,
+    overallRating,
+    summary,
+    insights,
+    recommendations
+  };
 }
