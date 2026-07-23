@@ -23,7 +23,7 @@ import { enrichTrackpointsWithWeather } from './utils/weather.js';
 
 import raceRoutes from './routes/races.js';
 import authRoutes from './routes/auth.js';
-
+console.log("***** SERVER STARTED *****");
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -164,7 +164,7 @@ app.post(
   uploadRateLimiter,
   upload.single('gpx'),
   async (req, res) => {
-
+console.log("UPLOAD ENDPOINT HIT");
     try {
 
 
