@@ -316,8 +316,8 @@ try {
   console.log("===== AI SAVED =====");
 
 } catch (err) {
-  console.error("AI failed");
-  console.error(err);
+  console.error("===== AI FAILED =====");
+  console.error(err.stack);
 }
 
       // Return finished data
@@ -339,38 +339,7 @@ try {
 
 
 
-      // AI runs after response
-
-      (async () => {
-  console.log("=== AI START ===");
-
-  try {
-    console.log("Calling analyzeRaceAI...");
-
-    const ai = await analyzeRaceAI({
-      id: raceId,
-      data: raceData
-    });
-
-    console.log("AI RESULT:");
-    console.dir(ai, { depth: null });
-
-    raceData.analysis = raceData.analysis || {};
-    raceData.analysis.ai = ai;
-
-    console.log("Saving AI to database...");
-
-    await updateRaceData(raceId, raceData);
-
-    console.log("AI SAVED");
-
-  } catch (error) {
-    console.error("AI FAILED:");
-    console.error(error);
-  }
-})();
-
-
+  
 
     } catch(error) {
 
